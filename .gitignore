@@ -1,0 +1,10 @@
+# raw Flow downloads (the chosen clips live in assets/video/)
+Cutscenes/
+# OS / editor / tooling clutter
+desktop.ini
+Thumbs.db
+.DS_Store
+__pycache__/
+node_modules/
+*.tmp
+Trailer/*_video.mp4

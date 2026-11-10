@@ -1,0 +1,26 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #050403;
+  overflow: hidden;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+canvas#game {
+  display: block;
+  background: #000;
+  image-rendering: auto;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#introVideo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

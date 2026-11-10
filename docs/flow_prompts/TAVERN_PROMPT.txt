@@ -1,0 +1,68 @@
+ERIC DA RED - FINAL SCENE: "THE APPLES ARE MINE!"  (Google Flow prompts)
+=======================================================================
+
+Flow clips are about 8 seconds, so the scene is split into 4 shots. Make them in order and
+use Flow's "Extend" / "Jump to" (or the last frame of the previous clip as the start frame)
+so it plays as one continuous scene. 16:9, highest resolution.
+
+REFERENCE IMAGES TO ADD IN FLOW
+- Eric:      source_art\Character\Create_3D_character_images_f961a7d0.jpg
+- WolfZtnel: source_art\Character\Character_Wolfztnel.jpg
+
+CHARACTER BLOCKS (paste into each shot that shows them)
+
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge
+braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under
+weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded
+battle-axes crossed on his back.
+
+WolfZtnel: an enormous, hulking, barrel-chested Viking, much bigger than Eric, with a shaved
+tattooed head and a single long braid at the back, a scarred weathered face, a grey-and-ginger
+goatee with two small braids, a huge grey wolf-fur mantle over a studded leather chest harness
+and chainmail, thick tattooed forearms with leather-and-iron bracers trimmed in fur, a large round
+knotwork belt buckle, and a seax knife on his belt.
+
+STYLE (add to the end of every shot):
+Photorealistic cinematic 3D, Unreal Engine look, warm firelight, shallow depth of field,
+comedic timing, consistent characters, no on-screen text.
+
+
+SHOT 1 - THE TOAST  (save as cut_tavern_1.mp4)
+----------------------------------------------
+Inside a crowded, smoky Viking tavern at night, lit by a central firepit, candles and lanterns,
+with long wooden tables covered in tankards, bread, roast fish and a wooden bowl of shiny red
+apples at the center of the table. Eric Da Red sits at the head of the table, beaming and
+blushing, as the whole tavern raises tankards and drinking horns toward him and cheers "SKÅL!"
+Vikings slap him on the back and mead foam splashes. Eric grins proudly, adjusts his spectacles
+and his eyes land on the bowl of apples.
+
+SHOT 2 - THE REACH AND THE GRAB  (save as cut_tavern_2.mp4)
+-----------------------------------------------------------
+Close-up on the wooden table in warm candlelight. Eric's hand, in a leather bracer with a green
+sleeve, slowly and happily reaches for one perfect, glossy red apple at the center of the
+table. The instant his fingertips touch the apple, a huge, thick, muscular tattooed hand and
+forearm in a fur-trimmed leather-and-iron bracer slams in from above and clamps around Eric's
+wrist. The tankards jump. In the background the crowd freezes mid-cheer and gasps, mead
+dripping from open mouths. Silence. A deep, growling voice says: "The Apples are mine!"
+
+SHOT 3 - THE REVEAL AND THE TOSS  (save as cut_tavern_3.mp4)
+------------------------------------------------------------
+The camera slowly pulls back and tilts up the giant tattooed arm to reveal WolfZtnel towering
+over the table, holding Eric up by the wrist so his boots dangle in the air, glaring down at
+him. Eric blinks behind his spectacles and gives a weak smile. WolfZtnel effortlessly flings
+Eric over the table like a rag doll. Eric tumbles through the air across the tavern and crashes
+into a stack of barrels, which explode in splinters and spraying mead as patrons dive aside.
+
+SHOT 4 - THE LAUGH  (save as cut_tavern_4.mp4)
+----------------------------------------------
+WolfZtnel throws his head back and roars with booming laughter, picks up the shiny red apple and
+takes a huge crunchy bite, then raises a giant mead-filled drinking horn high into the air. The
+whole tavern erupts in cheers and raises their tankards with him, mead foam flying. In the
+foreground, Eric's legs and boots stick up out of a pile of broken barrels, and one hand slowly
+rises from the wreckage holding a single sheet of parchment: a complaint form.
+
+
+TIP: if Flow keeps making WolfZtnel too similar to Eric, add "WolfZtnel is bald with NO red hair
+and NO glasses" to the shot. If a shot comes out wrong, regenerate just that shot.
+Drop the finished clips into this Cutscenes folder and tell me. I'll play them in place of the
+in-game version of the scene, which stays as the fallback.

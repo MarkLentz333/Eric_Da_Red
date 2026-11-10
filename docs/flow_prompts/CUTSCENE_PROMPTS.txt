@@ -1,0 +1,46 @@
+ERIC DA RED - GOOGLE FLOW CUTSCENE PROMPTS
+==========================================
+
+FOR EVERY CLIP
+- Add the character sheet (and the video) from the source_art\Character\ folder as a reference so Eric stays on-model.
+- Format: 16:9, highest resolution available. Clips are about 8 seconds.
+- Save the finished videos in this Cutscenes\ folder, using the file names below.
+
+CHARACTER BLOCK (paste at the start of any prompt with Eric in it):
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes crossed on his back. Photorealistic cinematic 3D, Unreal Engine look.
+
+
+1. cut_intro.mp4  -  after "Begin the Saga", before the Jarl's decree
+---------------------------------------------------------------------
+Wide aerial shot at dawn over a misty Norwegian fjord village with turf-roofed longhouses, smoking chimneys and red-striped longships at wooden docks. The camera glides down to a cozy cottage where Eric sits at a cluttered desk piled with ledgers, scrolls and wax seals, quill behind his ear. A messenger's hand slaps a scroll sealed with red wax onto the desk. Eric unrolls it, reads, pushes his spectacles up his nose and lets out a long, weary sigh. Warm candlelight, gentle snowfall outside the window, comedic timing, cinematic.
+
+
+2. cut_docks.mp4  -  Chapter I, before the crate fight
+------------------------------------------------------
+Sunset at a busy Viking harbor. Cargo crates swing down from a longship on ropes, and one rope snaps and a crate crashes onto the dock and splinters. Eric strides into frame holding a clipboard-like wooden ledger, inspects the broken crate, then slowly turns to the camera with a deadpan stare as the splintered crate lid twitches and growls. Orange sky, drifting mist, cinematic, slightly comedic.
+
+
+3. cut_warehouse.mp4  -  Chapter II, the paperwork comes alive
+--------------------------------------------------------------
+Night inside a vast dim timber warehouse lit by lanterns, snow falling through gaps in the roof. Eric holds up a parchment manifest and squints at it. The paper suddenly flutters out of his hand, hovers in the air and folds itself to form an angry face. Dozens of documents lift off the shelves and swirl around him like a storm of paper. Eric's eye twitches and he slowly reaches back for his axes. Moody blue lighting, warm lantern glow, cinematic, comedic.
+
+
+4. cut_bridge.mp4  -  Chapter IV, Cousin Sven's toll bridge
+-----------------------------------------------------------
+Snowy night at an old stone bridge over a rushing river, torches burning on posts and a hand-painted sign reading TOLL. A smug Viking who looks like Eric, but with a strawberry-blond braided beard, blocks the bridge holding up a long parchment scroll that unrolls all the way to the ground. Eric arrives, carrying a small golden goat statue under one arm. The two cousins stare each other down as snow falls, and Eric slowly draws both axes. Western-standoff framing, cinematic.
+
+
+5. cut_kraken.mp4  -  Final chapter, before the boss (the biggest moment)
+-------------------------------------------------------------------------
+A violent storm at the mouth of a fjord, with lightning, towering waves and rain. Eric stands at the end of a wooden pier with his axes drawn. The sea erupts as a colossal purple kraken rises from the water, its glistening spotted skin covered in barnacles and soggy parchment invoices with red wax seals. Its single enormous amber eye wears a gold monocle on a chain. Giant suckered tentacles burst from the waves around the pier, each clutching an unpaid invoice. The kraken's eye narrows at Eric. Epic, dramatic, cinematic lightning flashes.
+
+
+6. cut_ending.mp4  -  The finale, after the Kraken
+--------------------------------------------------
+Inside a grand Viking great hall during a roaring midwinter feast, firelight glowing on carved dragon pillars and red stag banners. Vikings cheer and raise drinking horns as Eric sets a golden goat statue on a pedestal beside the throne and dusts off his hands, satisfied. A jolly, heavyset Jarl with a crown hands him a new scroll. Eric unrolls it, and it shows a drawing of an elephant. Eric freezes, then slowly looks straight at the camera in disbelief. Warm, festive, comedic.
+
+
+HOW THEY'LL PLAY IN THE GAME
+- Every cutscene can be skipped with a click or Esc.
+- The game music fades down while a clip plays, so Flow's own sound comes through.
+- Any clip you don't make just falls back to the dialogue that's there now.
