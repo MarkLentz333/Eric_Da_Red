@@ -80,20 +80,20 @@ const WORLD_NPCS = [
     [{ s: 'gunnhild', t: 'Olaf says a crate bit him. Olaf also says the moon follows him home.' }, { s: 'eric', m: 'smirk', t: 'The crate DID bite him. I have it in writing.' }],
     [{ s: 'gunnhild', t: 'If you see Bjarni at the axe range, tell him the target is not a "mood board".' }],
   ] },
-  { id: 'olaf', name: 'Olaf', x: 1500, y: 1820, wander: 160, body: ['sven', 'sepia(0.55) saturate(0.8) brightness(0.92)'], talk: [
+  { id: 'olaf', name: 'Olaf', x: 1500, y: 1820, wander: 160, body: ['sven', 'sepia(0.6) saturate(1.25) brightness(1.3) contrast(0.92)'], talk: [
     [{ s: 'olaf', t: 'Eric! I counted the cod. Twice. Got two different numbers.' }, { s: 'eric', m: 'calm', t: 'Then count a third time and take the average.' }, { s: 'olaf', t: '...That\'s allowed?' }],
     [{ s: 'olaf', t: 'My hand still hurts from the crate. Do crates have teeth? Is that in the manifest?' }],
     [{ s: 'olaf', t: 'I heard there\'s a well in the forest that grants wishes. I wished for fewer crates.' }, { s: 'eric', m: 'shout', t: 'DON\'T WISH FOR FEWER CRATES. WE NEED FORTY.' }],
   ] },
-  { id: 'haldor', name: 'Old Haldor', x: 1320, y: 2080, wander: 60, body: ['sven', 'grayscale(0.85) brightness(1.12) contrast(0.95)'], talk: [
+  { id: 'haldor', name: 'Old Haldor', x: 1320, y: 2080, wander: 60, body: ['sven', 'grayscale(0.9) brightness(1.6) contrast(0.8)'], talk: [
     [{ s: 'haldor', t: 'Sixty winters I\'ve fished this fjord. Never seen a squid with a monocle. Until Tuesday.' }],
     [{ s: 'haldor', t: 'Herring calms the blood, lad. Eat one before you go red. Or after. Or during.' }],
     [{ s: 'haldor', t: 'The big beast at the fjord mouth hates paperwork. Funny. So does everyone.' }],
   ] },
-  { id: 'bjarni', name: 'Bjarni the Axe-Master', x: 1930, y: 2200, wander: 40, body: ['smuggler', 'brightness(1.35) sepia(0.35) saturate(1.2)'], range: true, talk: [
+  { id: 'bjarni', name: 'Bjarni the Axe-Master', x: 1930, y: 2200, wander: 40, body: ['smuggler', 'brightness(1.9) sepia(0.55) saturate(1.5) contrast(0.88)'], range: true, talk: [
     [{ s: 'bjarni', t: 'Quartermaster! Fancy a throw? Five axes. Bullseye is fifty. Wind is free.' }],
   ] },
-  { id: 'ulf', name: 'Little Ulf', x: 2150, y: 1720, wander: 260, fast: true, body: ['sven', 'hue-rotate(-20deg) saturate(1.4) brightness(1.05)'], scale: 0.72, talk: [
+  { id: 'ulf', name: 'Little Ulf', x: 2150, y: 1720, wander: 260, fast: true, body: ['sven', 'hue-rotate(-20deg) saturate(1.5) brightness(1.35)'], scale: 0.72, talk: [
     [{ s: 'ulf', t: 'Are you a REAL Viking? You have glasses.' }, { s: 'eric', m: 'smirk', t: 'The glasses are how I see who to chop.' }],
     [{ s: 'ulf', t: 'I found a shiny thing behind the barn! Then I lost it! It\'s probably still there!' }],
     [{ s: 'ulf', t: 'When I grow up I want to be a quartermaster. Or a goat.' }],
@@ -148,3 +148,7 @@ IMAGES.eric_side = 'assets/sprites/eric_side.png';
 
 // Dragon Ridge: a scorched clearing in the north woods (Darrell's "Close the SQI" order plays cut_dragon.mp4 here)
 const DRAGON_RIDGE = { x: 2420, y: 520, ix: 2380, iy: 590 };
+// v3.1: rig parts for the walk cycle (tools/rig/rig_eric.py) and tile-free trees (tools/rig/untile_trees.py)
+for (const r of ['front', 'back', 'q34', 'sven_front', 'smuggler_q34'])
+  for (const k of ['body', 'armL', 'armR', 'legL', 'legR']) IMAGES[`rig_${r}_${k}`] = `assets/sprites/rig/${r}_${k}.png`;
+for (const t of ['pines', 'pine2', 'oak', 'willow', 'willow2']) IMAGES['t_' + t] = `assets/world/t_${t}.png`;

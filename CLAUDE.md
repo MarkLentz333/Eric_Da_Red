@@ -31,6 +31,10 @@ fallback) → ledger roll / THE END.
   Props come from `assets/world/` (map props with the diorama soil base stripped). The east tree-line has a gate that opens when the
   Forest Road is unlocked, and the river is crossed by the bridge once it's cleared. Also: villagers (`WORLD_NPCS`, recolored placeholders
   until real art arrives; `npc_<id>` images override them), roaming skirmishes (`SKIRMISHES`, `sk_*` encounters), hidden `CACHES`.
+- Overworld look (v3.1): Eric and the villagers walk with a paper-doll rig. `tools/rig/rig_eric.py` cuts the front/back/3-4 sprites into
+  body/arms/legs (`assets/sprites/rig/`; pivots in `RIG` in world.js). Arms swing about the shoulders, boots step, and the body bobs/leans.
+  Trees use tile-free `t_*` sprites (`tools/rig/untile_trees.py`). Everything casts a skewed silhouette shadow (light from upper left).
+  Grass tufts and reeds are procedural decals, the camera is zoomed (`ZOOM`), and tall things go see-through when they cover Eric.
 - Side content: `axethrow.js` (Bjarni's range, best score + prizes) and `meadhall.js` (The Drunken Goat, an interactive tavern with the
   user's real-life coworkers as characters: Darrell = Eric's boss, gives `DISPATCH` side quests; Thomas = VP of Ops, negative, ends
   lines with "huh?" and says "Make it happen"; Nichole = office manager, always helpful: heals, gifts, hints, reveals caches).

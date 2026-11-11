@@ -5,7 +5,14 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 160, ERIC_R = 22, WALK = 400;
+const ERIC_H = 168, ERIC_R = 22, WALK = 400, ZOOM = 1.14;
+// paper-doll rig for the overworld walk cycle (parts cut by tools/rig/rig_eric.py; sprite-pixel pivots)
+const RIG = {
+  front: { w: 365, h: 682, armL: [70, 202], armR: [295, 202], legL: [125, 462], legR: [240, 462], relax: 0.11 },
+  back: { w: 356, h: 677, armL: [72, 205], armR: [284, 205], legL: [120, 436], legR: [236, 436], relax: 0.11 },
+  q34: { w: 318, h: 684, armL: [60, 205], armR: [280, 212], legL: [100, 470], legR: [205, 470], relax: 0.05, far: 'armR' },
+};
+let _cvId = 0;
 
 function _rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function _chaikin(pts, it = 2, closed = true) {
@@ -114,14 +121,14 @@ class WorldScene extends MapScene {
     keepClear.push([DRAGON_RIDGE.x, DRAGON_RIDGE.y, 330], [DRAGON_RIDGE.ix, DRAGON_RIDGE.iy + 80, 260], [MEAD_HALL.x, MEAD_HALL.y, 260], [AXE_RANGE.x, AXE_RANGE.y, 220], [GATE.x + 65, GATE.y + 135, 260]);
     const clear = (x, y, extra = 0) => keepClear.every(([cx, cy, r]) => Math.hypot(x - cx, y - cy) > r + extra);
     const addTree = (x, y, kind, h, solid = true) => {
-      this.sprites.push({ kind: 'prop', img: 'w_' + kind, x, y, h, tree: true, sway: R() * TAU });
+      this.sprites.push({ kind: 'prop', img: 't_' + kind, x, y, h, tree: true, sway: R() * TAU });
       if (solid) this.solids.push({ x, y: y - 8, r: kind.startsWith('pine') ? 26 : 34 });
     };
     // the east tree-line (closed except the gate gap)
     for (let y = -40; y < WORLD.h + 60; y += 58) {
       if (y > TREELINE.gap[0] && y < TREELINE.gap[1]) continue;
       const x = TREELINE.x + (R() - 0.5) * 50;
-      this.sprites.push({ kind: 'prop', img: 'w_' + (R() < 0.5 ? 'pines' : 'pine2'), x, y, h: 300 + R() * 80, tree: true, sway: R() * TAU });
+      this.sprites.push({ kind: 'prop', img: 't_' + (R() < 0.5 ? 'pines' : 'pine2'), x, y, h: 300 + R() * 80, tree: true, sway: R() * TAU });
       this.solids.push({ x: TREELINE.x, y, r: 44 });
     }
     // forests & groves
@@ -144,16 +151,24 @@ class WorldScene extends MapScene {
       }
     }
     // reeds along shores, grass tufts & bushes in meadows (no collision)
-    for (let i = 0; i < 900 && this.decals.length < 420; i++) {
+    for (let i = 0; i < 5200 && this.decals.length < 2200; i++) {
       const x = R() * WORLD.w, y = R() * WORLD.h;
-      if (wet(x, y) || nearRoad(x, y, 60)) continue;
-      const shore = wet(x, y, 60);
-      if (shore) { if (R() < 0.6) this.sprites.push({ kind: 'prop', img: 'w_reeds', x, y, h: 90 + R() * 40, tree: true, sway: R() * TAU }); continue; }
-      if (!clear(x, y, -60)) continue;
+      if (wet(x, y) || nearRoad(x, y, 52)) continue;
+      const shore = wet(x, y, 70);
+      if (shore) { if (R() < 0.7) this.decals.push({ x, y, t: 'reed', s: 0.8 + R() * 0.6, seed: R() * 99 }); continue; }
       const r = R();
-      if (r < 0.18) this.sprites.push({ kind: 'prop', img: 'w_' + (R() < 0.5 ? 'grass1' : 'grass2'), x, y, h: 50 + R() * 30, tree: true, sway: R() * TAU });
-      else if (r < 0.24) this.sprites.push({ kind: 'prop', img: 'w_bonsai', x, y, h: 70 + R() * 30 });
-      else this.decals.push({ x, y, t: r < 0.62 ? 'flower' : 'stone', c: pick(['#f4e6a2', '#e9a8c0', '#ffffff', '#b8c8ff', '#f2b45a']), s: 2 + R() * 3 });
+      if (r < 0.62) this.decals.push({ x, y, t: 'tuft', s: 0.7 + R() * 0.8, seed: R() * 99, dark: R() < 0.5 });
+      else if (r < 0.86) { if (clear(x, y, -80)) this.decals.push({ x, y, t: 'flower', c: pick(['#f4e6a2', '#e9a8c0', '#ffffff', '#b8c8ff', '#f2b45a']), s: 2 + R() * 3 }); }
+      else this.decals.push({ x, y, t: 'stone', s: 2 + R() * 3 });
+    }
+    // paint forest floor (darker, mossy) under trees and worn earth around the town square into the tonal map
+    {
+      const vc = this.varCv.getContext('2d'), k = 130 / WORLD.w;
+      for (const sp of this.sprites) if (sp.tree) { vc.fillStyle = 'rgba(16,34,10,0.16)'; vc.beginPath(); vc.arc(sp.x * k, sp.y * k, 2.6, 0, TAU); vc.fill(); }
+      for (const [x, y, r] of [[1760, 1640, 7], [1700, 1300, 5], [2300, 1600, 4], [1050, 2150, 4], [1300, 1950, 3]]) {
+        const g = vc.createRadialGradient(x * k, y * k, 0, x * k, y * k, r); g.addColorStop(0, 'rgba(150,120,70,0.35)'); g.addColorStop(1, 'rgba(150,120,70,0)');
+        vc.fillStyle = g; vc.beginPath(); vc.arc(x * k, y * k, r, 0, TAU); vc.fill();
+      }
     }
     // fixed props
     for (const p of WORLD_PROPS) {
@@ -165,7 +180,8 @@ class WorldScene extends MapScene {
     for (const id in WORLD_NODES) {
       const w = WORLD_NODES[id], n = NODE[id];
       const ground = id === 'bridge' || id === 'docks';
-      this.sprites.push({ kind: 'node', node: n, img: 'w_' + (w.prop || n.prop), x: w.x, y: w.y, h: w.h, ground, big: w.h > 220 });
+      const pr = w.prop || n.prop;
+      this.sprites.push({ kind: 'node', node: n, img: (G.img['t_' + pr] ? 't_' : 'w_') + pr, tree: !!G.img['t_' + pr], x: w.x, y: w.y, h: w.h, ground, big: w.h > 220 });
       if (w.r) this.solids.push({ x: w.x, y: w.y - w.h * 0.14, r: w.r, node: id });
     }
     this.sprites.push({ kind: 'prop', img: 'w_' + MEAD_HALL.p, x: MEAD_HALL.x, y: MEAD_HALL.y, h: MEAD_HALL.h, big: true, hall: true });
@@ -183,6 +199,20 @@ class WorldScene extends MapScene {
     this.built = true;
   }
 
+  // villagers: recolored rig parts of the Eric-shaped sprites (sven = front layout, smuggler = 3/4 layout)
+  npcRig(n) {
+    if (n.rig !== undefined) return n.rig;
+    const d = n.d;
+    if (G.img['npc_' + d.id] || !d.body) return (n.rig = null);
+    const base = d.body[0] === 'sven' ? 'sven_front' : d.body[0] === 'smuggler' ? 'smuggler_q34' : null;
+    if (!base || !G.img['rig_' + base + '_body']) return (n.rig = null);
+    const parts = {};
+    for (const k of ['body', 'armL', 'armR', 'legL', 'legR']) {
+      const src = G.img['rig_' + base + '_' + k], [cv, c] = _mkCv(src.width, src.height);
+      c.filter = d.body[1]; c.drawImage(src, 0, 0); cv._id = 'npc' + (++_cvId); parts[k] = cv;
+    }
+    return (n.rig = { dir: base.endsWith('q34') ? 'q34' : 'front', parts });
+  }
   npcBody(n) {
     if (n.img) return n.img;
     const d = n.d;
@@ -190,7 +220,7 @@ class WorldScene extends MapScene {
     if (!d.body) return null;
     const src = G.img[d.body[0]]; if (!src) return null;
     const [cv, c] = _mkCv(src.width, src.height);
-    c.filter = d.body[1]; c.drawImage(src, 0, 0);
+    c.filter = d.body[1]; c.drawImage(src, 0, 0); cv._id = 'npcb' + (++_cvId);
     return (n.img = cv);
   }
 
@@ -223,10 +253,10 @@ class WorldScene extends MapScene {
     AudioSys.playMusic('background');
     if (!this._stamp) this._stamp = Art.makeStamp('APPROVED', '#c4271b', 420, 120);
   }
-  snapCam() {
-    this.cam.x = clamp(this.e.x - W / 2, 0, WORLD.w - W);
-    this.cam.y = clamp(this.e.y - H * 0.56, 0, WORLD.h - H);
-  }
+  get vw() { return W / ZOOM; }
+  get vh() { return H / ZOOM; }
+  camTarget() { return [clamp(this.e.x - this.vw / 2, 0, WORLD.w - this.vw), clamp(this.e.y - this.vh * 0.56, 0, WORLD.h - this.vh)]; }
+  snapCam() { [this.cam.x, this.cam.y] = this.camTarget(); }
   regionAt(x, y) {
     if (x > 4280) return ['THE FJORD MOUTH', 'Where the Backorder waits'];
     if (x > 3960 && y < 1000) return ['THE TOLL BRIDGE', 'Under new management'];
@@ -329,7 +359,7 @@ class WorldScene extends MapScene {
   }
   drawRidge(c) {
     const r = DRAGON_RIDGE, act = this.sqiActive(), done = Game.save.sqiDone;
-    if (r.x < this.cam.x - 400 || r.x > this.cam.x + W + 400 || r.y < this.cam.y - 400 || r.y > this.cam.y + H + 400) return;
+    if (r.x < this.cam.x - 400 || r.x > this.cam.x + this.vw + 400 || r.y < this.cam.y - 400 || r.y > this.cam.y + this.vh + 400) return;
     // scorched clearing
     const g = c.createRadialGradient(r.x, r.y, 10, r.x, r.y, 230);
     g.addColorStop(0, 'rgba(20,12,8,0.9)'); g.addColorStop(0.55, 'rgba(45,30,18,0.65)'); g.addColorStop(1, 'rgba(45,30,18,0)');
@@ -349,7 +379,7 @@ class WorldScene extends MapScene {
     const sh = G.img._invoice;
     if (sh) { c.save(); c.translate(r.x + 95, r.y - 100); c.rotate(Math.sin(this.t * 1.5) * 0.04 + 0.08); c.drawImage(sh, -32, -6, 64, 80); c.restore(); }
     txt(c, done ? 'SQI CLOSED' : 'SQI', r.x + 95, r.y - 130, { size: 22, fam: F.head, weight: 900, align: 'center', color: done ? '#9cf08a' : '#ff6a3a', stroke: 'rgba(0,0,0,0.85)' });
-    if (act && Math.random() < 0.3) Particles.spawn('smoke', r.x - this.cam.x + rand(-80, 80), r.y - this.cam.y + rand(-20, 20), 1, { color: 'rgba(60,55,50,0.8)', speed: 40, speedMin: 10, g: -60, life: 2.5, size: 18, layer: 'back' });
+    if (act && Math.random() < 0.3) Particles.spawn('smoke', (r.x - this.cam.x + rand(-80, 80)) * ZOOM, (r.y - this.cam.y + rand(-20, 20)) * ZOOM, 1, { color: 'rgba(60,55,50,0.8)', speed: 40, speedMin: 10, g: -60, life: 2.5, size: 18, layer: 'back' });
   }
   async openHall() {
     if (Game.busy) return;
@@ -371,7 +401,7 @@ class WorldScene extends MapScene {
     try {
       Game.save.found = Game.save.found || {}; Game.save.found[cch.id] = true;
       AudioSys.sfx('coin'); AudioSys.sting('treasure');
-      Particles.spawn('glow', cch.x - this.cam.x, cch.y - this.cam.y - 20, 20, { color: 'rgba(255,210,110,0.9)', speed: 260, g: -200, life: 1, layer: 'front' });
+      Particles.spawn('glow', (cch.x - this.cam.x) * ZOOM, (cch.y - this.cam.y - 20) * ZOOM, 20, { color: 'rgba(255,210,110,0.9)', speed: 260, g: -200, life: 1, layer: 'front' });
       await Notice.show('Hidden Cache!', Game.give(cch.reward));
       this.saveP(); Game.persist();
     } finally { Game.busy = false; }
@@ -406,7 +436,7 @@ class WorldScene extends MapScene {
     // ---- input → velocity
     let vx = (G.keys.KeyD || G.keys.ArrowRight ? 1 : 0) - (G.keys.KeyA || G.keys.ArrowLeft ? 1 : 0);
     let vy = (G.keys.KeyS || G.keys.ArrowDown ? 1 : 0) - (G.keys.KeyW || G.keys.ArrowUp ? 1 : 0);
-    const wm = { x: G.mouse.x + this.cam.x, y: G.mouse.y + this.cam.y };
+    const wm = { x: G.mouse.x / ZOOM + this.cam.x, y: G.mouse.y / ZOOM + this.cam.y };
     if (vx || vy) this.target = null;
     else if ((G.mouse.clicked || (G.mouse.down && this.target)) && !this.hudHit(G.mouse)) {
       // clicking an interactable walks to it and uses it on arrival
@@ -431,17 +461,17 @@ class WorldScene extends MapScene {
       const moved = this.tryMove(e, vx * sp, vy * sp);
       if (!moved && this.target) this.target = null;
       e.moving = moved;
-      if (Math.abs(vx) > Math.abs(vy) * 1.2) { e.dir = 'side'; e.flip = vx < 0; }
+      if (Math.abs(vx) > Math.abs(vy) * 1.2) { e.dir = 'q34'; e.flip = vx < 0; }
       else if (vy < 0) e.dir = 'back';
       else e.dir = Math.abs(vx) > 0.35 ? 'q34' : 'front';
-      if (e.dir === 'q34') e.flip = vx > 0;
+      if (e.dir === 'q34') e.flip = vx < 0;
       if (moved) {
         e.phase += dt * (G.keys.ShiftLeft || G.keys.ShiftRight ? 13 : 10);
         if (Math.floor(e.phase / Math.PI) !== e.step) { e.step = Math.floor(e.phase / Math.PI); AudioSys.sfx('step', { x: e.x - this.cam.x }); }
       }
     }
     // camera
-    const tx = clamp(e.x - W / 2, 0, WORLD.w - W), ty = clamp(e.y - H * 0.56, 0, WORLD.h - H);
+    const [tx, ty] = this.camTarget();
     this.cam.x += (tx - this.cam.x) * Math.min(1, dt * 5); this.cam.y += (ty - this.cam.y) * Math.min(1, dt * 5);
     // region banner
     const rg = this.regionAt(e.x, e.y);
@@ -521,7 +551,7 @@ class WorldScene extends MapScene {
 
   // ------------------------------------------------------------------ draw
   drawGround(c) {
-    const v = { x: this.cam.x, y: this.cam.y, w: W, h: H };
+    const v = { x: this.cam.x, y: this.cam.y, w: this.vw, h: this.vh };
     c.fillStyle = this.grassPat; c.fillRect(v.x, v.y, v.w, v.h);
     c.save(); c.globalAlpha = 0.85; c.imageSmoothingEnabled = true; c.drawImage(this.varCv, 0, 0, WORLD.w, WORLD.h); c.restore();
     // shores & water
@@ -558,6 +588,23 @@ class WorldScene extends MapScene {
     // decals
     for (const d of this.decals) {
       if (d.x < v.x - 20 || d.x > v.x + v.w + 20 || d.y < v.y - 20 || d.y > v.y + v.h + 20) continue;
+      if (d.t === 'tuft') {
+        c.strokeStyle = d.dark ? 'rgba(38,70,22,0.75)' : 'rgba(150,190,80,0.7)'; c.lineWidth = 2; c.lineCap = 'round';
+        const sw = Math.sin(this.t * 1.6 + d.seed) * 2;
+        for (let i = -2; i <= 2; i++) { const hh = (9 + Math.abs((d.seed * (i + 3)) % 7)) * d.s; c.beginPath(); c.moveTo(d.x + i * 3 * d.s, d.y); c.quadraticCurveTo(d.x + i * 4 * d.s, d.y - hh * 0.6, d.x + i * 6 * d.s + sw, d.y - hh); c.stroke(); }
+        continue;
+      }
+      if (d.t === 'reed') {
+        const sw = Math.sin(this.t * 1.3 + d.seed) * 3;
+        c.lineCap = 'round';
+        for (let i = -3; i <= 3; i++) {
+          const hh = (34 + (d.seed * (i + 5)) % 24) * d.s, tx = d.x + i * 4 + sw * (hh / 50) + i * 2;
+          c.strokeStyle = i % 2 ? 'rgba(46,82,32,0.95)' : 'rgba(84,120,48,0.95)'; c.lineWidth = 2.4;
+          c.beginPath(); c.moveTo(d.x + i * 3, d.y); c.quadraticCurveTo(d.x + i * 3.5, d.y - hh * 0.5, tx, d.y - hh); c.stroke();
+          if ((i + 3) % 3 === 0) { c.fillStyle = '#5a3a1e'; c.beginPath(); c.ellipse(tx, d.y - hh + 6, 2.6, 7, 0, 0, TAU); c.fill(); }
+        }
+        continue;
+      }
       if (d.t === 'flower') { c.fillStyle = d.c; c.beginPath(); c.arc(d.x, d.y, d.s, 0, TAU); c.fill(); c.fillStyle = 'rgba(255,240,150,0.9)'; c.beginPath(); c.arc(d.x, d.y, d.s * 0.35, 0, TAU); c.fill(); }
       else { c.fillStyle = 'rgba(40,40,35,0.35)'; c.beginPath(); c.ellipse(d.x + 2, d.y + 3, d.s * 2.4, d.s * 1.3, 0, 0, TAU); c.fill(); c.fillStyle = '#8f8a7e'; c.beginPath(); c.ellipse(d.x, d.y, d.s * 2.2, d.s * 1.4, 0, 0, TAU); c.fill(); }
     }
@@ -566,15 +613,14 @@ class WorldScene extends MapScene {
     c.save(); c.globalAlpha = a; c.fillStyle = '#000';
     c.beginPath(); c.ellipse(x, y, w, w * 0.32, 0, 0, TAU); c.fill(); c.restore();
   }
-  drawProp(c, sp) {
+  drawProp(c, sp, fade = 1) {
     const img = G.img[sp.img]; if (!img) return null;
     const s = sp.h / img.height, w = img.width * s;
-    if (sp.x + w / 2 < this.cam.x - 50 || sp.x - w / 2 > this.cam.x + W + 50 || sp.y - sp.h > this.cam.y + H + 50 || sp.y < this.cam.y - 50) return null;
+    if (sp.x + w / 2 < this.cam.x - 50 || sp.x - w / 2 > this.cam.x + this.vw + 50 || sp.y - sp.h > this.cam.y + this.vh + 50 || sp.y < this.cam.y - 50) return null;
     let lockTint = false;
     if (sp.kind === 'node') lockTint = !this.unlocked(sp.node);
-    if (!sp.tree) this.drawShadow(c, sp.x + w * 0.04, sp.y - sp.h * 0.06, w * 0.36, 0.16);
-    else this.drawShadow(c, sp.x + 8, sp.y - 4, Math.min(80, w * 0.42), 0.32);
-    c.save(); c.translate(sp.x, sp.y);
+    if (sp.tree) this.drawShadow(c, sp.x + 4, sp.y - 2, Math.min(34, w * 0.16), 0.35);   // contact shadow at the trunk
+    c.save(); c.translate(sp.x, sp.y); if (fade < 1) c.globalAlpha = fade;
     if (sp.tree && sp.sway != null) { c.transform(1, 0, Math.sin(this.t * 1.2 + sp.sway) * 0.025, 1, 0, 0); }
     c.drawImage(img, -w / 2, -sp.h, w, sp.h);
     if (lockTint) { c.globalAlpha = 0.45; c.drawImage(tinted(img, '#0b0d14'), -w / 2, -sp.h, w, sp.h); }
@@ -620,19 +666,47 @@ class WorldScene extends MapScene {
     c.restore();
     return { x: x - 180, y: y - 210, w: 270, h: 210, base: y };
   }
-  drawEric(c, alpha = 1) {
-    const e = this.e;
-    const key = { front: 'eric_front', back: 'eric_back', side: 'eric_side', q34: 'eric' }[e.dir];
-    const img = G.img[key] || G.img.eric; if (!img) return;
-    const s = ERIC_H / img.height, w = img.width * s;
-    const bob = e.moving ? Math.abs(Math.sin(e.phase)) * 7 : Math.sin(this.t * 2) * 1.2;
-    const tilt = e.moving ? Math.sin(e.phase) * 0.045 : 0;
-    if (alpha === 1) this.drawShadow(c, e.x, e.y, 36 - bob * 0.8, 0.45);
-    c.save(); c.globalAlpha = alpha; c.translate(e.x, e.y - bob); c.rotate(tilt);
-    const flip = e.dir === 'side' ? (e.flip ? -1 : 1) : e.dir === 'q34' ? (e.flip ? -1 : 1) : 1;
-    c.scale(flip * (1 + (e.moving ? Math.sin(e.phase * 2) * 0.012 : 0)), 1 - (e.moving ? Math.abs(Math.cos(e.phase)) * 0.02 : 0));
-    c.drawImage(img, -w / 2, -ERIC_H, w, ERIC_H);
+  // draws a rigged character: boots step, body bobs/leans, arms swing about the shoulders
+  drawRigged(c, x, y, h, dir, parts, ph, amt, flip, t, alpha = 1) {
+    const R = RIG[dir], s = h / R.h, sn = Math.sin(ph);
+    const lift = 34 * amt, bob = Math.abs(sn) * 14 * amt + Math.sin(t * 2) * 2 * (1 - amt);
+    c.save(); c.globalAlpha = alpha;
+    c.translate(x, y); c.scale(s * (flip ? -1 : 1), s);
+    if (dir === 'q34') c.rotate(0.035 * amt);                     // lean into the stride
+    c.translate(-R.w / 2, -R.h);
+    const leg = (k, up, rot) => {
+      const [px, py] = R[k]; c.save(); c.translate(px, py - up); c.rotate(rot); c.translate(-px, -py); c.drawImage(parts[k], 0, 0); c.restore();
+    };
+    const st = dir === 'q34' ? 0.2 * amt : 0;
+    leg('legL', Math.max(0, sn) * lift, sn * st); leg('legR', Math.max(0, -sn) * lift, -sn * st);
+    const arm = k => {
+      const [px, py] = R[k], side = k === 'armL' ? -1 : 1;
+      const a = side * R.relax * (0.6 + 0.4 * amt) + sn * 0.17 * amt * (dir === 'q34' ? -side : 1) + Math.sin(t * 1.7 + side) * 0.015;
+      c.save(); c.translate(px, py - bob); c.rotate(a); c.translate(-px, -py); c.drawImage(parts[k], 0, 0); c.restore();
+    };
+    if (R.far) arm(R.far);
+    c.drawImage(parts.body, 0, -bob);
+    for (const k of ['armL', 'armR']) if (k !== R.far) arm(k);
     c.restore();
+  }
+  ericParts(dir) {
+    const p = {}; for (const k of ['body', 'armL', 'armR', 'legL', 'legR']) { p[k] = G.img['rig_' + dir + '_' + k]; if (!p[k]) return null; }
+    return p;
+  }
+  castShadow(c, img, x, y, w, h, flip = false, a = 0.26) {
+    const sh = tinted(img, '#000');
+    c.save(); c.globalAlpha = a; c.translate(x, y); c.transform(1, 0, -0.62, -0.28, 0, 0);
+    if (flip) c.scale(-1, 1);
+    c.drawImage(sh, -w / 2, -h, w, h); c.restore();
+  }
+  drawEric(c, alpha = 1) {
+    const e = this.e, dir = e.dir === 'side' ? 'q34' : e.dir;
+    const parts = this.ericParts(dir);
+    if (alpha === 1) this.drawShadow(c, e.x, e.y, 30, 0.4);
+    e.amt = lerp(e.amt || 0, e.moving ? 1 : 0, Math.min(1, G.dt * 10));
+    if (parts) { this.drawRigged(c, e.x, e.y, ERIC_H, dir, parts, e.phase, e.amt, dir === 'q34' && e.flip, this.t, alpha); return; }
+    const img = G.img.eric_front; if (!img) return;
+    const w = img.width * ERIC_H / img.height; c.save(); c.globalAlpha = alpha; c.drawImage(img, e.x - w / 2, e.y - ERIC_H, w, ERIC_H); c.restore();
   }
   drawNpc(c, n) {
     const img = this.npcBody(n);
@@ -644,12 +718,12 @@ class WorldScene extends MapScene {
       c.fillStyle = '#ffcf7a'; c.beginPath(); c.arc(lx, ly - 96, 9, 0, TAU); c.fill();
       return { base: n.y };
     }
+    this.drawShadow(c, n.x, n.y, 26 * (d.scale || 1), 0.4);
+    const rig = this.npcRig(n);
+    n.amt = lerp(n.amt || 0, n.moving ? 1 : 0, Math.min(1, G.dt * 8));
+    if (rig) { this.drawRigged(c, n.x, n.y, h, rig.dir, rig.parts, n.t * (d.fast ? 13 : 8), n.amt, n.face < 0, n.t + n.d.x); return { base: n.y }; }
     const s = h / img.height, w = img.width * s;
-    const bob = n.moving ? Math.abs(Math.sin(n.t * 9)) * 5 : Math.sin(n.t * 2) * 1;
-    this.drawShadow(c, n.x, n.y, 30 * (d.scale || 1), 0.42);
-    c.save(); c.translate(n.x, n.y - bob); c.rotate(n.moving ? Math.sin(n.t * 9) * 0.04 : 0);
-    c.drawImage(img, -w / 2, -h, w, h);
-    c.restore();
+    c.save(); c.translate(n.x, n.y); c.scale(n.face < 0 ? -1 : 1, 1); c.drawImage(img, -w / 2, -h, w, h); c.restore();
     return { base: n.y };
   }
   drawSkirm(c, s) {
@@ -657,7 +731,7 @@ class WorldScene extends MapScene {
     const h = d.h, sc = h / img.height, w = img.width * sc;
     const hop = Math.abs(Math.sin(s.t * (s.chase ? 10 : 4))) * (s.chase ? 14 : 6);
     this.drawShadow(c, s.x, s.y, w * 0.4, 0.4);
-    c.save(); c.translate(s.x, s.y - hop); c.scale(s.face < 0 ? -1 : 1, 1);
+    c.save(); c.translate(s.x, s.y - hop); c.scale(s.face < 0 && d.img !== '_invoice' ? -1 : 1, 1);
     c.drawImage(img, -w / 2, -h, w, h);
     c.restore();
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -703,8 +777,8 @@ class WorldScene extends MapScene {
     }
   }
   draw(c) {
-    const cx = Math.round(this.cam.x + G.cam.sx), cy = Math.round(this.cam.y + G.cam.sy);
-    c.save(); c.translate(-cx, -cy);
+    const cx = this.cam.x + G.cam.sx / ZOOM, cy = this.cam.y + G.cam.sy / ZOOM;
+    c.save(); c.scale(ZOOM, ZOOM); c.translate(-cx, -cy);
     this.drawGround(c);
     // ground-level things
     for (const sp of this.sprites) if (sp.ground) this.drawProp(c, sp);
@@ -715,9 +789,24 @@ class WorldScene extends MapScene {
     }
     this.drawRidge(c);
     for (const cch of CACHES) this.drawCache(c, cch);
+    // cast shadows (light from the upper left) for everything standing up
+    const vx0 = cx - 300, vx1 = cx + this.vw + 300, vy0 = cy - 200, vy1 = cy + this.vh + 500;
+    for (const sp of this.sprites) {
+      if (sp.ground || sp.kind === 'range' || sp.x < vx0 || sp.x > vx1 || sp.y < vy0 || sp.y > vy1) continue;
+      const img = G.img[sp.img]; if (!img) continue;
+      this.castShadow(c, img, sp.x, sp.y, img.width * sp.h / img.height, sp.h, false, sp.tree ? 0.24 : 0.18);
+    }
+    { const ei = G.img[{ front: 'eric_front', back: 'eric_back', q34: 'eric', side: 'eric' }[this.e.dir]]; if (ei) this.castShadow(c, ei, this.e.x, this.e.y, ei.width * ERIC_H / ei.height, ERIC_H, false, 0.24); }
+    for (const n of this.npcs) { const im = this.npcBody(n); if (im && n.x > vx0 && n.x < vx1 && n.y > vy0 && n.y < vy1) { const h = ERIC_H * (n.d.scale || 1); this.castShadow(c, im, n.x, n.y, im.width * h / im.height, h, false, 0.24); } }
     // depth-sorted world
     const list = [];
-    for (const sp of this.sprites) if (!sp.ground) list.push({ y: sp.y, f: () => sp.kind === 'range' ? this.drawRange(c, sp.x, sp.y) : this.drawProp(c, sp), big: sp.big || sp.tree && sp.h > 240 });
+    const fadeFor = sp => {   // tall things in front of Eric go see-through so he's never lost behind them
+      if (!(sp.tree || sp.big) || sp.y <= this.e.y + 8) return 1;
+      const img = G.img[sp.img]; if (!img) return 1;
+      const w = img.width * sp.h / img.height, ex = this.e.x, ey = this.e.y - ERIC_H * 0.45;
+      return ex > sp.x - w * 0.38 && ex < sp.x + w * 0.38 && ey > sp.y - sp.h * 0.95 && ey < sp.y - sp.h * 0.12 ? 0.3 : 1;
+    };
+    for (const sp of this.sprites) if (!sp.ground) list.push({ y: sp.y, f: () => sp.kind === 'range' ? this.drawRange(c, sp.x, sp.y) : this.drawProp(c, sp, fadeFor(sp)) });
     for (const n of this.npcs) list.push({ y: n.y, f: () => this.drawNpc(c, n) });
     Game.save.skirm = Game.save.skirm || {};
     for (const s of this.skirm) if (!Game.save.skirm[s.d.id] && !(s.d.need && !this.unlocked(NODE[s.d.need]))) list.push({ y: s.y, f: () => this.drawSkirm(c, s) });
@@ -725,19 +814,11 @@ class WorldScene extends MapScene {
     if (!this.gateOpen()) list.push({ y: GATE.y + GATE.h, f: () => this.drawGate(c) });
     list.push({ y: this.e.y, f: () => this.drawEric(c), eric: true });
     list.sort((a, b) => a.y - b.y);
-    let occluded = false;
-    const ex = this.e.x, ey = this.e.y - ERIC_H * 0.5;
-    let after = false;
-    for (const it of list) {
-      const r = it.f();
-      if (it.eric) { after = true; continue; }
-      if (after && r && r.w && it.big && ex > r.x + r.w * 0.15 && ex < r.x + r.w * 0.85 && ey > r.y && ey < r.base) occluded = true;
-    }
-    if (occluded) this.drawEric(c, 0.38);
+    for (const it of list) it.f();
     // cloud shadows drifting over the land
     c.save(); c.globalCompositeOperation = 'multiply';
     for (const cl of this.cloudShadows) {
-      if (cl.x + cl.s < cx || cl.x - cl.s > cx + W || cl.y + cl.s * 0.5 < cy || cl.y - cl.s * 0.5 > cy + H) continue;
+      if (cl.x + cl.s < cx || cl.x - cl.s > cx + this.vw || cl.y + cl.s * 0.5 < cy || cl.y - cl.s * 0.5 > cy + this.vh) continue;
       c.globalAlpha = 0.22; c.drawImage(glowSprite('rgba(60,70,90,0.9)'), cl.x - cl.s, cl.y - cl.s * 0.4, cl.s * 2, cl.s * 0.8);
     }
     c.restore();
@@ -772,7 +853,7 @@ class WorldScene extends MapScene {
     const obj = this.objective();
     if (obj) {
       const w = WORLD_NODES[obj.id], ox = w.mx || w.ix, oy = (w.my || w.iy) - 230;
-      if (ox > this.cam.x && ox < this.cam.x + W && oy > this.cam.y && oy < this.cam.y + H) {
+      if (ox > this.cam.x && ox < this.cam.x + this.vw && oy > this.cam.y && oy < this.cam.y + this.vh) {
         const b = Math.sin(this.t * 4) * 10;
         c.save(); c.translate(ox, oy + b); c.fillStyle = '#ffcf6a'; c.shadowColor = 'rgba(255,170,60,0.9)'; c.shadowBlur = 18;
         c.beginPath(); c.moveTo(-22, -16); c.lineTo(0, 10); c.lineTo(22, -16); c.lineTo(12, -16); c.lineTo(0, -4); c.lineTo(-12, -16); c.closePath(); c.fill(); c.restore();
@@ -823,7 +904,7 @@ class WorldScene extends MapScene {
     }
     // objective pointer at screen edge
     if (obj && !Game.busy && !G.overlay) {
-      const w = WORLD_NODES[obj.id], ox = (w.mx || w.ix) - this.cam.x, oy = (w.my || w.iy) - 120 - this.cam.y;
+      const w = WORLD_NODES[obj.id], ox = ((w.mx || w.ix) - this.cam.x) * ZOOM, oy = ((w.my || w.iy) - 120 - this.cam.y) * ZOOM;
       if (ox < 0 || ox > W || oy < 0 || oy > H) {
         const cxs = W / 2, cys = H / 2, a = Math.atan2(oy - cys, ox - cxs);
         // keep the pointer inside a safe frame that avoids the HUD panels
@@ -855,7 +936,7 @@ class WorldScene extends MapScene {
     c.fillStyle = '#fff'; c.strokeStyle = '#c4271b'; c.lineWidth = 2.5;
     c.beginPath(); c.arc(mx + this.e.x * s, my + this.e.y * (mh / WORLD.h), 6, 0, TAU); c.fill(); c.stroke();
     c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 1;
-    c.strokeRect(mx + this.cam.x * s, my + this.cam.y * (mh / WORLD.h), W * s, H * (mh / WORLD.h));
+    c.strokeRect(mx + this.cam.x * s, my + this.cam.y * (mh / WORLD.h), this.vw * s, this.vh * (mh / WORLD.h));
     // region title
     if (this.regionT > 0) {
       const a = clamp(this.regionT > 2.6 ? (3.2 - this.regionT) / 0.6 : this.regionT / 0.8, 0, 1);
