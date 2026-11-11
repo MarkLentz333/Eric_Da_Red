@@ -26,6 +26,7 @@ const ROADS = [
   [[1760, 1640], [1880, 1900], [2060, 2080]],                                                                 // town → axe range
   [[3150, 1780], [3050, 2100], [2960, 2420]],                                                                 // oak → well
   [[3640, 2140], [3700, 1700], [3560, 1300], [3480, 1060]],                                                   // woodpile → camp
+  [[1650, 1180], [1800, 960], [2020, 780], [2250, 640], [2380, 560]],                                       // town → Dragon Ridge (north woods)
   [[3480, 1060], [3700, 900], [3960, 840], [4340, 840], [4560, 960], [4700, 1300], [4760, 1560]],              // camp → bridge → fjord
 ];
 
@@ -144,3 +145,6 @@ Object.assign(SPEAKERS, {
 });
 for (const n of ['darrell', 'thomas', 'nichole']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; }
 IMAGES.eric_side = 'assets/sprites/eric_side.png';
+
+// Dragon Ridge: a scorched clearing in the north woods (Darrell's "Close the SQI" order plays cut_dragon.mp4 here)
+const DRAGON_RIDGE = { x: 2420, y: 520, ix: 2380, iy: 590 };

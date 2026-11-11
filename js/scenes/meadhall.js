@@ -16,6 +16,16 @@ const DISPATCH = [
       { s: 'eric', m: 'calm', t: 'I\'m in the middle of a forty-barrel delivery.' },
       { s: 'darrell', t: 'And now you\'re in the middle of two things. Need it by end of shift.' },
     ] },
+  { id: 'sqi', title: 'Close the SQI', desc: 'A dragon filed a Service Quality Inquiry. Go to Dragon Ridge (north woods) and resolve it.',
+    prog: () => [Game.save.sqiDone ? 1 : 0, 1], reward: { rune: 1, mead: 1 },
+    give: [
+      { s: 'darrell', t: 'Eric. We got an SQI.' },
+      { s: 'eric', m: 'calm', t: 'A Service Quality Inquiry? On what?' },
+      { s: 'darrell', t: 'On you. From a dragon. Says the mead was "lukewarm and three days late."' },
+      { s: 'thomas', t: 'Was it lukewarm? Huh?' },
+      { s: 'eric', m: 'shout', t: 'IT\'S A DRAGON. EVERYTHING IS LUKEWARM TO A DRAGON.' },
+      { s: 'darrell', t: 'Dragon Ridge, up in the north woods. Close it out by end of shift.' },
+    ] },
   { id: 'stash', title: 'Recover the Lost Stash', desc: 'Find 4 hidden caches around the map.',
     prog: () => [Object.keys(Game.save.found || {}).length, 4], reward: { rune: 1 },
     give: [
@@ -132,7 +142,8 @@ class MeadHallScene {
     if (!q.given) { q.given = true; await Dialog.play(o.give); AudioSys.sfx('paper'); await Notice.show('New Dispatch Order', [{ text: o.title, color: '#ffd76a' }, { text: o.desc }]); return; }
     const [h, n] = o.prog();
     if (h < n) { await Dialog.play([{ s: 'darrell', t: pick([`${o.title}: you\'re at ${Math.min(h, n)} of ${n}. Clock\'s ticking.`, `Still waiting on "${o.title}". ${Math.min(h, n)} of ${n}. Radio me when it\'s done.`, `${Math.min(h, n)} of ${n}? I told the Jarl you\'d be done an hour ago.`]) }]); return; }
-    await Dialog.play([{ s: 'darrell', t: pick(['Done? Already? Huh. Good work.', 'Nice. That\'s one off the board.', 'Good. I\'ll tell corporate it was my idea.']) }, { s: 'thomas', t: 'Took long enough. Huh?' }]);
+    if (o.id === 'sqi') await Dialog.play([{ s: 'darrell', t: 'The dragon withdrew the SQI. It also asked us to never contact it again.' }, { s: 'eric', m: 'smirk', t: 'Customer educated. Ticket closed.' }, { s: 'thomas', t: 'Did it at least give us five stars? Huh?' }]);
+    else await Dialog.play([{ s: 'darrell', t: pick(['Done? Already? Huh. Good work.', 'Nice. That\'s one off the board.', 'Good. I\'ll tell corporate it was my idea.']) }, { s: 'thomas', t: 'Took long enough. Huh?' }]);
     AudioSys.sfx('coin'); AudioSys.sting('treasure');
     await Notice.show('Order Complete: ' + o.title, Game.give(o.reward));
     q.d++; q.given = false;

@@ -34,7 +34,7 @@ fallback) → ledger roll / THE END.
 - Side content: `axethrow.js` (Bjarni's range, best score + prizes) and `meadhall.js` (The Drunken Goat, an interactive tavern with the
   user's real-life coworkers as characters: Darrell = Eric's boss, gives `DISPATCH` side quests; Thomas = VP of Ops, negative, ends
   lines with "huh?" and says "Make it happen"; Nichole = office manager, always helpful: heals, gifts, hints, reveals caches).
-  First visit plays `cut_crew.mp4`. Their sprites/portraits were cut from turnaround sheets in `source_art/Character/` (`Create_3D_*.jpg`).
+  First visit plays `cut_crew.mp4`. Order #2 "Close the SQI" sends Eric to DRAGON_RIDGE (north woods), which plays `cut_dragon.mp4`. Their sprites/portraits were cut from turnaround sheets in `source_art/Character/` (`Create_3D_*.jpg`).
 - Save fields added in v3: `pos`, `skirm`, `found`, `axeBest`, `axePrize`, `q` (mead hall quest state), `revealCaches`.
 - v1 = tag `v1.0` / branch `backup/v1`; v2 = branch `v2`. Art/video/music wishlist: `docs/ASSET_PROMPTS.txt`. New art drops into
   `NewCharactersAdded/` (gitignored). Turnaround sheets on a dark-gray background cut out well (see the cut script approach:

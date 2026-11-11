@@ -111,7 +111,7 @@ class WorldScene extends MapScene {
     for (const n of WORLD_NPCS) keepClear.push([n.x, n.y, (n.wander || 0) + 120]);
     for (const s of SKIRMISHES) keepClear.push([s.x, s.y, s.area + 90]);
     for (const c of CACHES) keepClear.push([c.x, c.y, 90]);
-    keepClear.push([MEAD_HALL.x, MEAD_HALL.y, 260], [AXE_RANGE.x, AXE_RANGE.y, 220], [GATE.x + 65, GATE.y + 135, 260]);
+    keepClear.push([DRAGON_RIDGE.x, DRAGON_RIDGE.y, 330], [DRAGON_RIDGE.ix, DRAGON_RIDGE.iy + 80, 260], [MEAD_HALL.x, MEAD_HALL.y, 260], [AXE_RANGE.x, AXE_RANGE.y, 220], [GATE.x + 65, GATE.y + 135, 260]);
     const clear = (x, y, extra = 0) => keepClear.every(([cx, cy, r]) => Math.hypot(x - cx, y - cy) > r + extra);
     const addTree = (x, y, kind, h, solid = true) => {
       this.sprites.push({ kind: 'prop', img: 'w_' + kind, x, y, h, tree: true, sway: R() * TAU });
@@ -270,6 +270,7 @@ class WorldScene extends MapScene {
       out.push({ x: p.x, y: p.y, label: d.range ? 'Throw axes' : 'Talk', sub: d.name, act: () => this.talk(p), npc: p });
     }
     out.push({ x: AXE_RANGE.ix, y: AXE_RANGE.iy, label: 'Throw axes', sub: 'The Axe Range', act: () => this.openRange() });
+    if (this.sqiActive()) out.push({ x: DRAGON_RIDGE.ix, y: DRAGON_RIDGE.iy, label: 'Resolve', sub: "The dragon's SQI", act: () => this.resolveSqi() });
     out.push({ x: MEAD_HALL.ix, y: MEAD_HALL.iy, label: 'Enter', sub: 'The Drunken Goat (mead hall)', act: () => this.openHall() });
     return out;
   }
@@ -312,6 +313,44 @@ class WorldScene extends MapScene {
       await goto(new AxeThrowScene(), 0.5);
     } finally { Game.busy = false; }
   }
+  sqiActive() { const q = Game.save.q; return !!(q && q.given && DISPATCH[q.d] && DISPATCH[q.d].id === 'sqi' && !Game.save.sqiDone); }
+  async resolveSqi() {
+    if (Game.busy) return; Game.busy = true;
+    try {
+      await Dialog.play([{ s: 'eric', m: 'calm', t: 'Right. Scorch marks, claw marks, one very angry Service Quality Inquiry nailed to a tree.' }, { s: 'eric', m: 'shout', t: 'WHERE IS THE COMPLAINANT?' }]);
+      AudioSys.sfx('roar'); AudioSys.sfx('thunder'); shake(18);
+      await wait(0.8);
+      await Cutscene.play('dragon');
+      Game.save.sqiDone = true; this.saveP(); Game.persist();
+      await Dialog.play([{ s: 'eric', m: 'smirk', t: 'SQI resolved. Root cause: customer was a dragon. Corrective action: also axes.' }]);
+      AudioSys.sting('victory');
+      await Notice.show('SQI Closed', [{ text: 'Report back to Darrell at the Drunken Goat', color: '#ffd76a' }]);
+    } finally { Game.busy = false; }
+  }
+  drawRidge(c) {
+    const r = DRAGON_RIDGE, act = this.sqiActive(), done = Game.save.sqiDone;
+    if (r.x < this.cam.x - 400 || r.x > this.cam.x + W + 400 || r.y < this.cam.y - 400 || r.y > this.cam.y + H + 400) return;
+    // scorched clearing
+    const g = c.createRadialGradient(r.x, r.y, 10, r.x, r.y, 230);
+    g.addColorStop(0, 'rgba(20,12,8,0.9)'); g.addColorStop(0.55, 'rgba(45,30,18,0.65)'); g.addColorStop(1, 'rgba(45,30,18,0)');
+    c.save(); c.translate(r.x, r.y); c.scale(1, 0.55); c.translate(-r.x, -r.y); c.fillStyle = g; c.beginPath(); c.arc(r.x, r.y, 230, 0, TAU); c.fill(); c.restore();
+    // claw gouges
+    c.save(); c.strokeStyle = 'rgba(10,6,4,0.8)'; c.lineWidth = 7; c.lineCap = 'round';
+    for (let i = 0; i < 3; i++) { c.beginPath(); c.moveTo(r.x - 90 + i * 26, r.y - 40); c.quadraticCurveTo(r.x - 60 + i * 26, r.y, r.x - 20 + i * 26, r.y + 40); c.stroke(); }
+    c.restore();
+    // embers
+    for (let i = 0; i < 9; i++) {
+      const a = i * 2.4, rr2 = 40 + (i * 37) % 130, ex = r.x + Math.cos(a) * rr2, ey = r.y + Math.sin(a) * rr2 * 0.5;
+      const p = 0.5 + Math.sin(this.t * 3 + i) * 0.5;
+      c.save(); c.globalCompositeOperation = 'lighter'; c.drawImage(glowSprite(`rgba(255,${100 + p * 60},30,${0.3 + p * 0.4})`), ex - 18, ey - 18, 36, 36); c.restore();
+    }
+    // the SQI nailed to a post
+    c.fillStyle = '#3a2412'; c.fillRect(r.x + 90, r.y - 120, 10, 120);
+    const sh = G.img._invoice;
+    if (sh) { c.save(); c.translate(r.x + 95, r.y - 100); c.rotate(Math.sin(this.t * 1.5) * 0.04 + 0.08); c.drawImage(sh, -32, -6, 64, 80); c.restore(); }
+    txt(c, done ? 'SQI CLOSED' : 'SQI', r.x + 95, r.y - 130, { size: 22, fam: F.head, weight: 900, align: 'center', color: done ? '#9cf08a' : '#ff6a3a', stroke: 'rgba(0,0,0,0.85)' });
+    if (act && Math.random() < 0.3) Particles.spawn('smoke', r.x - this.cam.x + rand(-80, 80), r.y - this.cam.y + rand(-20, 20), 1, { color: 'rgba(60,55,50,0.8)', speed: 40, speedMin: 10, g: -60, life: 2.5, size: 18, layer: 'back' });
+  }
   async openHall() {
     if (Game.busy) return;
     this.saveP(); Game.persist(); AudioSys.sfx('step'); AudioSys.sfx('wood');
@@ -349,7 +388,7 @@ class WorldScene extends MapScene {
 
   // ------------------------------------------------------------------ update
   hudHit(m) {
-    return inRect(m, 0, 0, 640, 230) || inRect(m, W - 660, 0, 660, 300) || inRect(m, W - 380, H - 270, 380, 270);
+    return inRect(m, 0, 0, 640, 230) || inRect(m, W - 660, 0, 660, 320) || inRect(m, W - 380, H - 270, 380, 270);
   }
   update(dt) {
     this.t += dt;
@@ -674,6 +713,7 @@ class WorldScene extends MapScene {
       c.save(); c.strokeStyle = 'rgba(40,30,20,0.9)'; c.lineWidth = 6; c.setLineDash([10, 6]);
       c.beginPath(); c.moveTo(d.x + 60, d.y + 10); c.quadraticCurveTo(d.x + 70, d.y + 70, d.x + 60, d.y + d.h); c.stroke(); c.restore();
     }
+    this.drawRidge(c);
     for (const cch of CACHES) this.drawCache(c, cch);
     // depth-sorted world
     const list = [];
@@ -772,9 +812,9 @@ class WorldScene extends MapScene {
     const dq = Game.save.q, dor = dq && dq.given && DISPATCH[dq.d];
     if (dor) {
       const [h, n] = dor.prog();
-      panel(c, W - 644, 222, 620, 64, { r: 10 });
-      txt(c, "DARRELL'S ORDER", W - 620, 260, { size: 18, fam: F.head, weight: 900, color: C.gold, letter: 2 });
-      txt(c, `${dor.title}  ${Math.min(h, n)}/${n}`, W - 420, 261, { size: 23, fam: F.head, weight: 700, color: h >= n ? '#9cf08a' : '#fff' });
+      panel(c, W - 644, 222, 620, 86, { r: 10 });
+      txt(c, "DARRELL'S ORDER", W - 620, 252, { size: 18, fam: F.head, weight: 900, color: C.gold, letter: 2 });
+      txt(c, `${dor.title}  ${Math.min(h, n)}/${n}`, W - 620, 290, { size: 25, fam: F.head, weight: 700, color: h >= n ? '#9cf08a' : '#fff' });
     }
     if (!this.bigmap && !this.pack && !this.menu) {
       if (button(c, 'pack', W - 644, 152, 196, 58, 'Pack', { icon: Art.icon.pouch, sub: 'I', size: 24 })) this.pack = true;
@@ -809,6 +849,7 @@ class WorldScene extends MapScene {
       c.fillStyle = n.type === 'battle' && !cl ? '#ff5a3a' : n.type === 'rest' ? '#ffb040' : cl ? '#9cc98a' : '#ffe2a0';
       c.beginPath(); c.arc(mx + w.ix * s, my + w.iy * (mh / WORLD.h), 4.5, 0, TAU); c.fill();
     }
+    if (this.sqiActive()) { c.fillStyle = '#ff6a3a'; c.beginPath(); c.arc(mx + DRAGON_RIDGE.x * s, my + DRAGON_RIDGE.y * (mh / WORLD.h), 5, 0, TAU); c.fill(); }
     if (Game.save.revealCaches) for (const cch of CACHES) if (!(Game.save.found || {})[cch.id]) { c.fillStyle = '#ffd76a'; c.fillRect(mx + cch.x * s - 3, my + cch.y * (mh / WORLD.h) - 3, 6, 6); }
     if (obj) { const w = WORLD_NODES[obj.id], p = 0.5 + Math.sin(this.t * 5) * 0.5; c.strokeStyle = `rgba(255,210,110,${0.5 + p * 0.5})`; c.lineWidth = 2; c.beginPath(); c.arc(mx + w.ix * s, my + w.iy * (mh / WORLD.h), 8 + p * 3, 0, TAU); c.stroke(); }
     c.fillStyle = '#fff'; c.strokeStyle = '#c4271b'; c.lineWidth = 2.5;
@@ -844,6 +885,7 @@ class WorldScene extends MapScene {
       if (cl && n.type === 'battle') txt(c, '✓', px + 20, py - 14, { size: 22, weight: 900, color: '#9cf08a', stroke: '#000' });
     }
     if (Game.save.revealCaches) for (const cch of CACHES) if (!(Game.save.found || {})[cch.id]) { c.fillStyle = '#ffd76a'; c.beginPath(); c.arc(ox + cch.x * s, oy + cch.y * s, 7, 0, TAU); c.fill(); txt(c, 'cache', ox + cch.x * s, oy + cch.y * s + 22, { size: 16, align: 'center', color: '#ffe2a0', stroke: 'rgba(0,0,0,0.8)' }); }
+    if (this.sqiActive() || Game.save.sqiDone) { const RX = ox + DRAGON_RIDGE.x * s, RY = oy + DRAGON_RIDGE.y * s; c.fillStyle = this.sqiActive() ? '#ff6a3a' : '#9cc98a'; c.beginPath(); c.arc(RX, RY, 8, 0, TAU); c.fill(); txt(c, 'Dragon Ridge', RX, RY - 14, { size: 18, fam: F.head, weight: 700, align: 'center', color: '#ffe2b0', stroke: 'rgba(0,0,0,0.8)' }); }
     const HX = ox + MEAD_HALL.x * s, HY = oy + MEAD_HALL.y * s;
     c.fillStyle = '#ffcf6a'; c.beginPath(); c.arc(HX, HY, 6, 0, TAU); c.fill();
     txt(c, 'The Drunken Goat', HX, HY - 14, { size: 18, fam: F.head, weight: 700, align: 'center', color: '#ffe2b0', stroke: 'rgba(0,0,0,0.8)' });
