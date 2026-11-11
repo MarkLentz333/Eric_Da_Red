@@ -1,0 +1,66 @@
+ERIC DA RED - VERSION 2 IMPROVEMENT PLAN
+=========================================
+
+Backup of v1
+- git tag  v1.0  and branch  backup/v1  (the exact live version)
+- zip copy: ..\Eric_Da_Red_Backups\Eric_Da_Red_v1.0.zip
+- v2 work happens on the  v2  branch. Nothing is pushed live until you say so.
+
+What v1 is missing (found while reading the code)
+- Battles have no music of their own: battle/boss slots are empty, so fights replay the map song.
+- Every hit makes roughly the same sound. Nothing is panned or pitch-varied, and there's no room/reverb.
+- No musical "transitions": entering a fight, winning, losing, chapter cards and rests are all a plain fade + one beep.
+- Enemy turns are random surprises, so there's not much strategy beyond "attack".
+- Blocking is pass/fail only. A great reaction isn't rewarded.
+- The camera never moves except for shake. Killing blows don't land with any weight.
+
+
+PART 1 - MUSIC (new js/music.js: an original adaptive soundtrack, synthesized live)
+- Three new battle themes, all original, in a Nordic minor/dorian style (war drums, frame drum,
+  drone like a tagelharpa, horn lead, choir pads):
+    battle  - "Quartermaster's March" (140 bpm, driving)   all normal fights
+    boss    - "Toll & Trouble"        (heavier, half-time) Cousin Sven
+    kraken  - "The Backorder"         (dark choir, storm)  final boss
+- ADAPTIVE LAYERS: at Madness >= 70 a rage layer (extra war drums, distorted bass) fades in.
+  During RED FURY the whole mix goes full intensity. Low HP adds a heartbeat pulse.
+- TRANSITION STINGERS (short musical pieces):
+    battle start (war horn + drum hit), victory fanfare, defeat dirge, level-up flourish,
+    chapter-card horn, rest/camp lyre, treasure jingle.
+- Real song files still win: put an mp3 in config.js (battle/boss) and it's used instead.
+
+PART 2 - COMBAT SOUND EFFECTS
+- A new sound bus with stereo panning: sounds come from where they happen on screen.
+- Light reverb so hits sit in a space instead of beeping in a void.
+- Random pitch/level variation on every hit so repeated chops never sound copy-pasted.
+- New per-material impacts: wood crack + splinter, paper rip, rope snap, flesh thud,
+  tentacle squelch, metal clang for blocks, ringing PARRY, crit "boom-ting", heavy body fall,
+  and a separate death sound for each enemy type.
+
+PART 3 - GAMEPLAY
+- ENEMY INTENTS: each enemy shows what it will do next turn (attack + rough damage,
+  madness attack, or heal) above its health bar. Brace / Block / kill order become real choices.
+- PERFECT PARRY: block in the first instant of the "!" window and you take 0 damage and 0 madness.
+  Melee attackers get counter-chopped.
+- RHYTHM COMBO: each PERFECT timing or parry adds a stack (max 5, +8% damage each).
+  A miss or an unblocked hit resets it. Shown beside the status panel.
+- BATTLE RATING: S/A/B/C on the victory screen (turns taken, damage taken, perfects).
+  Best ratings are saved per fight, which gives replay value.
+
+PART 4 - GRAPHICS & FEEL
+- Camera punch-zoom toward the impact on crits, kills and the Fury slam.
+- Killing-blow slow-motion on the last enemy of a fight.
+- Impact starbursts, enemy squash on hit, white death flash and a dissolve.
+- New BATTLE TRANSITION: a diagonal red axe-slash wipe instead of a plain fade into fights.
+- Low-HP red heartbeat vignette.
+- Drifting ground fog on every battlefield for depth.
+
+PART 5 - THINGS FOR YOU TO MAKE LATER (see docs\V2_ASSET_PROMPTS.txt)
+- Character portraits for the speakers who only have letter emblems (Gunnhild, Jarl, Olaf, Kraken).
+- More Sven moods, unique battle backgrounds (warehouse interior, toll bridge), an Eric hurt/victory pose.
+- New Flow cutscenes for the Forest Road, the Smugglers, Sven's defeat and the campfire.
+- Optional music-generator prompts if you'd rather have real recorded songs than the synth score.
+  The game already picks up any files you drop in.
+
+Testing
+- Every change is checked with headless Chrome screenshots and console-error checks
+  (battle, boss, kraken, map, transitions).

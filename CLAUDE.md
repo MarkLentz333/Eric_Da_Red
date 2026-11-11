@@ -18,7 +18,14 @@ fallback) → ledger roll / THE END.
 - Cutscenes: `Cutscene.play(name | [names])` plays `assets/video/cut_<name>.mp4` and resolves `true` if anything played.
   Missing files fall back gracefully. Node→clip map is `NODE_CUTSCENES` in `main.js`.
 - Overlays (dialog/banner/notice/cutscene) live in `js/scenes/dialog.js`. `Dialog.play(key, onLine)` has a per-line callback.
-- Audio: `AudioSys.playMusic(intro|background|battle|boss)`, `AudioSys.sfx(name)` (synthesized), and `AudioSys.duck(v, instant)`.
+- Audio: `AudioSys.playMusic(intro|background|battle|boss|kraken)`, `AudioSys.sfx(name, { x | pan, pitch })` (synthesized, panned),
+  `AudioSys.sting(name)` (musical transitions: battleStart, victory, defeat, levelup, chapter, rest, treasure), and `AudioSys.duck(v, instant)`.
+- `js/music.js` (v2): an original adaptive score synthesized with WebAudio. The battle/boss/kraken slots use it unless config.js names a file.
+  Layers: base, lead, rage (Madness >= 70), and fury. Battle sets them with `Music.intensity({ rage, fury })`.
+- v2 battle systems: enemy intents (`planIntents`/`intentInfo`), parry (press within 0.09 s of the `!`, or a hair early, for a counter),
+  Rhythm combo (+8% damage per stack, max 5), and S/A/B/C ratings (`ENCOUNTERS[].par`, best grade per fight in `Game.save.ratings`).
+  There's also camera punch, `slowmo()`, and `goto(scene, t, 'slash')` for the battle wipe.
+- v1 is preserved as git tag `v1.0` / branch `backup/v1`. Plans and asset prompts are in `docs/V2_PLAN.txt` and `docs/V2_ASSET_PROMPTS.txt`.
 
 ## Art pipeline (Python + OpenCV)
 - Source art is in `source_art/` (Character, Objects, Backgrounds). Game-ready cutouts are in `assets/`.

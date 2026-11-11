@@ -22,13 +22,14 @@ const Game = {
       const d = JSON.parse(localStorage.getItem(SAVE_KEY));
       if (!d) return false;
       this.player = Object.assign(newPlayer(), d.player);
-      this.save = Object.assign({ cleared: {}, at: 'home' }, d.save);
+      this.save = Object.assign({ cleared: {}, at: 'home', ratings: {} }, d.save);
+      if (!this.save.ratings) this.save.ratings = {};
       return true;
     } catch (e) { return false; }
   },
   async newGame() {
     this.player = newPlayer();
-    this.save = { cleared: {}, at: 'home' };
+    this.save = { cleared: {}, at: 'home', ratings: {} };
     this.persist();
     this.mapScene = new MapScene();
     await goto(this.mapScene, 0.8);
@@ -62,11 +63,13 @@ const Game = {
   },
   startBattle(encId) {
     return new Promise(res => {
+      // war horn + axe-slash wipe into the fight
+      AudioSys.stopMusic(0.4); AudioSys.sting('battleStart'); AudioSys.sfx('heavySwing');
       goto(new BattleScene(encId, async won => {
         if (ENCOUNTERS[encId].final && won) { res(won); return; }
         await goto(this.mapScene);
         res(won);
-      }));
+      }), 0.55, 'slash');
     });
   },
   async runNode(n) {
@@ -93,7 +96,7 @@ const Game = {
       } else if (n.type === 'rest') {
         await Dialog.play(first ? n.script : n.again);
         this.restore();
-        AudioSys.sfx('heal');
+        AudioSys.sfx('heal'); AudioSys.sting('rest');
         const lines = [{ text: 'HP, Focus restored. Madness calmed.', color: '#9cf08a' }];
         if (first && n.reward) lines.push(...this.give(n.reward));
         await Notice.show(first ? 'Rested & Resupplied' : 'Rested', lines);
@@ -101,7 +104,7 @@ const Game = {
         await Dialog.play(n.script);
         const lines = this.give(n.reward);
         if (n.heal) { this.restore(); lines.unshift({ text: 'HP, Focus restored. Madness calmed.', color: '#9cf08a' }); }
-        AudioSys.sfx('coin');
+        AudioSys.sfx('coin'); AudioSys.sting('treasure');
         await Notice.show('Found!', lines);
       }
       this.save.cleared[n.id] = true;
@@ -148,6 +151,7 @@ const LoadingScene = {
   if (q.get('mad')) Game.player.madness = +q.get('mad');
   if (q.has('battle')) {
     Game.mapScene = new MapScene();
+    Game.save.ratings = Game.save.ratings || {};
     goto(new BattleScene(q.get('battle'), async () => { await goto(Game.mapScene); }), 0.2);
   } else if (q.has('map')) {
     if (!Game.load()) { Game.save.cleared.home = true; }
