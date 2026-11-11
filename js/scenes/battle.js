@@ -42,15 +42,7 @@ class BattleScene {
       G.img._stamp_lose = Art.makeStamp('SHIPMENT LOST', '#5a5a5a', 820, 200);
       G.img._stamp_flag = Art.makeStamp('FLAGGED', '#c4271b', 420, 120);
     }
-    // v2: combo, rating stats, camera punch, impact bursts, heartbeat, fog
-    this.combo = 0; this.comboT = 0;
-    this.stats = { turns: 0, dmgTaken: 0, perfects: 0 };
-    this.punch = { z: 0, x: W / 2, y: H / 2 };
-    this.bursts = []; this.hbT = 0; this.hbFlash = 0;
-    if (!G.img._fog) G.img._fog = Art.makeCloud(1000, 260, '205,210,220');
-    this.fog = [0, 1, 2, 3].map(i => ({ x: i * 620 - 300, y: rand(690, 760), v: rand(10, 24) * (i % 2 ? 1 : -1), s: rand(1.1, 1.6) }));
-    Music.intensity({ rage: 0, fury: 0 });
-    AudioSys.playMusic(this.enc.final ? 'kraken' : this.enc.boss ? 'boss' : 'battle');
+    AudioSys.playMusic(this.enc.final ? 'boss' : 'battle');
     this.run();
   }
   addEnemy(id, x, y, extra) {
@@ -111,8 +103,6 @@ class BattleScene {
     await wait(1.4);
     while (true) {
       this.braced = false;
-      this.stats.turns++;
-      this.planIntents();
       this.banner('YOUR TURN');
       await wait(0.5);
       const act = await this.choose();
@@ -132,42 +122,6 @@ class BattleScene {
       if (await this.checkEnd()) return;
     }
   }
-  // ---- v2 helpers ------------------------------------------------------------
-  pickMove(e) {
-    let moves = e.d.moves.filter(m => !(m.heal && e.hp > e.maxHp * 0.7));
-    if (!moves.length) moves = e.d.moves;
-    let r = rand(0, moves.reduce((s, m) => s + m.w, 0)), mv = moves[0];
-    for (const m of moves) { r -= m.w; if (r <= 0) { mv = m; break; } }
-    return mv;
-  }
-  // enemies decide their next move at the start of your turn, and show it
-  planIntents() { for (const e of this.enemies) if (e.alive) e.intent = this.pickMove(e); }
-  intentInfo(e) {
-    const mv = e.intent; if (!mv) return null;
-    const parts = [];
-    if (mv.dmg && e.d.atk * mv.dmg >= 3) parts.push(`~${Math.max(1, Math.round(e.d.atk * mv.dmg * (mv.audit ? 1 + this.P.madness / 100 : 1)))} dmg`);
-    if (mv.mad) parts.push(`+${mv.mad} mad`);
-    if (mv.heal) parts.push('heals');
-    if (mv.steal) parts.push('steals');
-    const color = mv.heal ? '#9cf08a' : mv.dmg >= 1.15 ? '#ff8a6a' : mv.mad >= 15 ? '#e4a8ff' : '#ffd8b0';
-    return { text: `▸ ${mv.name}` + (parts.length ? '  ·  ' + parts.join(' · ') : ''), color };
-  }
-  addCombo() {
-    this.combo = Math.min(5, this.combo + 1); this.comboT = 0;
-    AudioSys.sfx('combo', { pitch: 1 + this.combo * 0.12 });
-  }
-  breakCombo() {
-    if (this.combo >= 2) { const c = this.ericCenter(); Floaters.add('RHYTHM LOST', c.x, c.y - 330, { color: '#c9b9a0', size: 34, delay: 0.2 }); AudioSys.sfx('comboBreak'); }
-    this.combo = 0;
-  }
-  addPunch(z, x, y) { if (z >= this.punch.z) Object.assign(this.punch, { z, x, y }); }
-  burst(x, y, s = 1, color = '255,230,170') { this.bursts.push({ x, y, s, color, t: 0, rot: rand(0, TAU) }); }
-  grade() {
-    const st = statsFor(this.P.level), par = this.enc.par || 4, S = this.stats;
-    const score = 100 - (S.dmgTaken / st.maxHp) * 55 - Math.max(0, S.turns - par) * 7 + Math.min(15, S.perfects * 3);
-    return score >= 88 ? 'S' : score >= 72 ? 'A' : score >= 55 ? 'B' : 'C';
-  }
-
   banner(text, enemy) { this.turnBanner = { text, t: 0, enemy }; AudioSys.sfx(enemy ? 'back' : 'click'); }
   showCaption(text, dur = 1.4, big = false) { this.caption = { text, t: 0, dur, big }; }
   bubble(e, text) { const p = this.etop(e); this.bubbles.push({ text, x: p.x, y: p.y - 20, t: 0, dur: 1.9 }); }
@@ -260,7 +214,6 @@ class BattleScene {
     if (o.fury) mod = Math.max(1, mod);
     m *= mod * ({ perfect: 1.5, good: 1.15, weak: 0.7 }[rating] || 1) * rand(0.92, 1.08);
     if (target.flagged > 0) m *= 1.4;
-    m *= 1 + 0.08 * (this.combo || 0);
     if (kind === 'axe' && this.P.madness >= 70 && !o.fury) m *= 1.25;
     let shielded = false;
     if (target.d.shielded && this.enemies.some(e => e.id === 'tentacle' && e.alive)) { m *= o.fury ? 0.5 : 0.25; shielded = true; }
@@ -277,18 +230,14 @@ class BattleScene {
     if (r.shielded) Floaters.add('SHIELDED', c.x, c.y - 140, { color: '#b99cff', size: 40, delay: 0.1 });
     else if (r.mod >= 1.5) Floaters.add('EFFECTIVE!', c.x, c.y - 140, { color: '#ffb347', size: 40, delay: 0.1 });
     else if (r.mod < 0.8) Floaters.add('RESISTED', c.x, c.y - 140, { color: '#aaa', size: 36, delay: 0.1 });
-    if (crit) { this.P.tally.perfect++; AudioSys.sfx('crit', { x: c.x }); this.addPunch(0.045, c.x, c.y); }
-    this.burst(c.x, c.y, crit ? 1.5 : 1, crit ? '255,215,120' : '255,240,210');
-    if (e.hp > 0 && (e.d.draw === 'sprite' || e.d.draw === 'person' || e.d.draw === 'paper')) {
-      tween(e, { sx: 1.1, sy: 0.9 }, 0.05, Ease.outQuad).then(() => { if (e.alive) tween(e, { sx: 1, sy: 1 }, 0.3, Ease.outBack); });
-    }
+    if (crit) { this.P.tally.perfect++; }
     // impact particles
     const t = e.type;
-    if (t === 'cargo' || t === 'tree') { Particles.spawn('chip', c.x, c.y, 26, { color: ['#8a5a33', '#b07a45', '#5a3a1f', '#d9a46a'], speed: 900, size: 12, ground: e.y + 10 }); AudioSys.sfx('crackWood', { x: c.x }); }
-    else if (t === 'rope') { Particles.spawn('chip', c.x, c.y, 22, { color: ['#d9c9a0', '#a8946a', '#efe2c0'], speed: 700, size: 9, ground: e.y + 10 }); AudioSys.sfx('snapRope', { x: c.x }); }
-    else if (t === 'paper') { Particles.spawn('paper', c.x, c.y, 22, { color: ['#f6ead0', '#efe0bd', '#ffffff'], speed: 650, g: 260 }); AudioSys.sfx('ripPaper', { x: c.x }); }
-    else if (t === 'tentacle' || t === 'kraken') { Particles.spawn('drop', c.x, c.y, 26, { color: ['#3a1a4a', '#7a3d8a', '#1a0a22'], speed: 800, size: 9 }); AudioSys.sfx('squelch', { x: c.x }); }
-    else { Particles.spawn('spark', c.x, c.y, 18, { color: '#ffd9a0', speed: 1000, size: 10 }); AudioSys.sfx('thud', { x: c.x }); }
+    if (t === 'cargo' || t === 'tree') { Particles.spawn('chip', c.x, c.y, 26, { color: ['#8a5a33', '#b07a45', '#5a3a1f', '#d9a46a'], speed: 900, size: 12, ground: e.y + 10 }); AudioSys.sfx('wood'); }
+    else if (t === 'rope') { Particles.spawn('chip', c.x, c.y, 22, { color: ['#d9c9a0', '#a8946a', '#efe2c0'], speed: 700, size: 9, ground: e.y + 10 }); AudioSys.sfx('wood'); }
+    else if (t === 'paper') { Particles.spawn('paper', c.x, c.y, 22, { color: ['#f6ead0', '#efe0bd', '#ffffff'], speed: 650, g: 260 }); AudioSys.sfx('paper'); }
+    else if (t === 'tentacle' || t === 'kraken') { Particles.spawn('drop', c.x, c.y, 26, { color: ['#3a1a4a', '#7a3d8a', '#1a0a22'], speed: 800, size: 9 }); AudioSys.sfx('hit'); }
+    else { Particles.spawn('spark', c.x, c.y, 18, { color: '#ffd9a0', speed: 1000, size: 10 }); AudioSys.sfx('hit'); }
     Particles.spawn('spark', c.x, c.y, crit ? 16 : 8, { color: '#fff3c0', speed: 1100, size: 12 });
     shake(crit ? 22 : 12); hitstop(crit ? 0.11 : 0.05);
     tween(e, { offX: e.offX + 26 }, 0.06).then(() => tween(e, { offX: 0 }, 0.3));
@@ -316,13 +265,6 @@ class BattleScene {
     else if (e.type === 'tentacle' || e.type === 'kraken') { Particles.spawn('drop', c.x, c.y, 60, { color: ['#3a1a4a', '#7a3d8a'], speed: 1000, size: 10 }); AudioSys.sfx('splash'); }
     else Particles.spawn('chip', c.x, c.y, 50, { color: ['#8a5a33', '#b07a45', '#5a3a1f'], speed: 1100, size: 14, ground: e.y + 10 });
     Particles.spawn('smoke', c.x, c.y + 40, 14, { color: 'rgba(200,190,180,1)', speed: 200, size: 30, life: 1.4 });
-    Particles.spawn('glow', c.x, c.y, 18, { color: 'rgba(255,190,110,0.9)', angle: -Math.PI / 2, spread: 1.2, speed: 380, g: -120, life: 1.3, size: 7 });
-    e.flash = 1; e.intent = null;
-    this.burst(c.x, c.y, 2.2, '255,200,140');
-    const t2 = e.type;
-    AudioSys.sfx(t2 === 'paper' ? 'diePaper' : t2 === 'people' ? 'diePerson' : (t2 === 'tentacle' || t2 === 'kraken') ? 'dieTentacle' : 'dieWood', { x: c.x });
-    this.addPunch(0.06, c.x, c.y);
-    if (!this.alive().length) { slowmo(0.28, 0.75); this.addPunch(0.1, c.x, c.y); }
     if (e.d.draw === 'tentacle') tween(e, { offY: 520, alpha: 0.0 }, 1.0, Ease.inCubic);
     else if (e.d.draw === 'kraken') {
       tween(e, { offY: 600 }, 2.4, Ease.inCubic); AudioSys.sfx('roar'); shake(30);
@@ -353,8 +295,6 @@ class BattleScene {
       }
     }
     q.rating = rating; q.endT = 0;
-    if (rating === 'perfect') { this.stats.perfects++; this.addCombo(); }
-    else if (rating === 'weak') this.breakCombo();
     AudioSys.sfx(rating === 'perfect' ? 'qtePerfect' : rating === 'good' ? 'qteGood' : 'qteMiss');
     const label = { perfect: 'PERFECT!', good: 'GOOD', weak: pressed ? 'SLOPPY' : 'TOO SLOW' }[rating];
     const pos = q.kind === 'ring' ? { x: q.x, y: q.y - 150 } : { x: W / 2, y: 250 };
@@ -373,7 +313,7 @@ class BattleScene {
       const rating = await this.runQTE('ring', { x: tc.x, y: tc.y, speed: sk.speed });
       const dual = e.axeB != null, ax = a => dual ? { axeA: a, axeB: a } : { axeA: a };
       await tween(e, Object.assign(ax(-2.5), { rot: -0.07, offY: sk.power > 1.5 ? -60 : 0 }), 0.14, Ease.outQuad);
-      AudioSys.sfx(sk.power > 1.5 ? 'heavySwing' : 'swing', { x: e.x + e.offX });
+      AudioSys.sfx('whoosh');
       await tween(e, Object.assign(ax(1.8), { rot: 0.1, offY: 0 }), 0.09, Ease.inQuad);
       AudioSys.sfx('chop');
       const hx = e.x + e.offX + HAND_R.x * e.s, hy = e.y + HAND_R.y * e.s;
@@ -394,7 +334,7 @@ class BattleScene {
       e.axeSpin = 1;
       for (let i = 0; i < targets.length; i++) {
         const t = targets[i]; if (!t.alive) continue;
-        AudioSys.sfx('swing', { x: t.x });
+        AudioSys.sfx('whoosh');
         await tween(e, { offX: (t.x - e.x) - 200 }, 0.14, Ease.inOutQuad);
         const tc = this.ecenter(t);
         Slashes.add(tc.x - 60, tc.y, 200, -Math.PI, Math.PI * 0.6, { w: 36 });
@@ -477,7 +417,7 @@ class BattleScene {
     for (let i = 0; i < 6; i++) {
       const alive = this.alive(); if (!alive.length) break;
       const t = pick(alive), tc = this.ecenter(t);
-      AudioSys.sfx('swing', { x: t.x, pitch: 0.85 + i * 0.05 });
+      AudioSys.sfx('whoosh');
       await tween(e, { offX: (t.x - e.x) - 240 + rand(-40, 40), axeA: -2.6, axeB: -2.2 }, 0.13, Ease.inOutQuad);
       await tween(e, { axeA: 1.8, axeB: 1.6 }, 0.07, Ease.inQuad);
       Slashes.add(tc.x - 40, tc.y, 220, i % 2 ? 0.9 : -2.2, i % 2 ? -2.2 : 0.9, { w: 46, color: '255,120,60' });
@@ -489,10 +429,8 @@ class BattleScene {
     }
     // finale: leap + ground slam on everything
     await tween(e, { offX: 560, offY: -260, axeA: -2.8, axeB: -2.8 }, 0.32, Ease.outQuad);
-    AudioSys.sfx('heavySwing');
     await tween(e, { offY: 0, axeA: 1.9, axeB: 1.9 }, 0.14, Ease.inQuad);
-    AudioSys.sfx('slam'); AudioSys.sfx('chop'); AudioSys.sfx('crit'); shake(40); hitstop(0.15); screenFlash('#ffffff', 0.5);
-    this.addPunch(0.11, e.x + 560, GROUND - 200); this.burst(e.x + 560, GROUND - 40, 3, '255,150,80');
+    AudioSys.sfx('slam'); AudioSys.sfx('chop'); shake(40); hitstop(0.15); screenFlash('#ffffff', 0.5);
     this.shockwaves.push({ x: e.x + 560, y: GROUND, t: 0, big: true });
     Particles.spawn('chip', e.x + 560, GROUND, 60, { color: ['#6a4a2a', '#3a2a1a', '#8a6a4a'], angle: -Math.PI / 2, spread: 1.2, speed: 1300, size: 14, ground: GROUND + 20 });
     for (const t of this.alive()) this.hitEnemy(t, 'axe', 0.6, 'good', { fury: true });
@@ -504,20 +442,15 @@ class BattleScene {
   }
 
   // ------------------------------------------------------------------ enemy turn
-  armBlock() { this.block = { armed: true, open: false, hit: false, early: false, parry: false, earlyAt: -9 }; }
-  // returns 'parry' (pressed the instant the ! lit — or a hair before), true (blocked) or false
-  async blockWindow(len = 0.26) {
-    const b = this.block;
-    b.open = true; b.openT = 0;
-    if (b.early && this.t - b.earlyAt < 0.07) { b.early = false; b.hit = true; b.parry = true; }
-    await wait(len); b.open = false; b.armed = false;
-    return b.parry ? 'parry' : b.hit;
-  }
+  armBlock() { this.block = { armed: true, open: false, hit: false, early: false }; }
+  async blockWindow(len = 0.26) { this.block.open = true; await wait(len); this.block.open = false; this.block.armed = false; return this.block.hit; }
 
   async enemyAct(e) {
     const P = this.P;
-    const mv = e.intent || this.pickMove(e);
-    e.intent = null;
+    let moves = e.d.moves.filter(m => !(m.heal && e.hp > e.maxHp * 0.7));
+    if (!moves.length) moves = e.d.moves;
+    let tot = moves.reduce((s, m) => s + m.w, 0), r = rand(0, tot), mv = moves[0];
+    for (const m of moves) { r -= m.w; if (r <= 0) { mv = m; break; } }
     this.showCaption(`${e.name}: ${mv.name}`, 1.5);
     if (mv.line) this.bubble(e, mv.line);
     e.flash = 0.35;
@@ -608,26 +541,6 @@ class BattleScene {
 
   hitEric(e, mv, blocked) {
     const P = this.P, er = this.eric, c = this.ericCenter();
-    const parried = blocked === 'parry';
-    if (parried) {
-      P.tally.blocks++; this.addCombo();
-      AudioSys.sfx('parry', { x: c.x + 80 }); hitstop(0.09); shake(10);
-      Floaters.add('PARRY!', c.x + 40, c.y - 230, { color: '#ffe27a', size: 64 });
-      Particles.spawn('spark', c.x + 90, c.y - 40, 40, { color: ['#fff6d0', '#ffd27a'], speed: 1500, size: 14 });
-      this.burst(c.x + 90, c.y - 40, 1.8, '255,235,160'); this.addPunch(0.05, c.x + 90, c.y - 40);
-      if (['lunge', 'roll', 'slam', 'tentacle'].includes(mv.fx) && e.alive) {
-        wait(0.1).then(async () => {
-          if (!e.alive) return;
-          er.axeA = -2.4; AudioSys.sfx('swing', { x: c.x + 150 });
-          await tween(er, { axeA: 1.6 }, 0.08, Ease.inQuad);
-          AudioSys.sfx('chop', { x: c.x + 200 });
-          Floaters.add('COUNTER!', c.x + 220, c.y - 300, { color: '#ffcf6a', size: 46 });
-          this.hitEnemy(e, 'axe', 0.45, 'good');
-          await wait(0.25); er.axeA = null;
-        });
-      }
-      return;
-    }
     let dmg = e.d.atk * (mv.dmg || 0) * rand(0.9, 1.1);
     if (mv.audit) dmg *= 1 + P.madness / 100;
     if (blocked) dmg *= 0.5;
@@ -635,13 +548,12 @@ class BattleScene {
     dmg = Math.round(dmg);
     if (blocked) {
       P.tally.blocks++;
-      AudioSys.sfx('clang', { x: c.x + 80 });
+      AudioSys.sfx('block');
       Floaters.add('BLOCKED!', c.x + 40, c.y - 220, { color: '#bfe4ff', size: 52 });
       Particles.spawn('spark', c.x + 80, c.y - 40, 24, { color: '#cfefff', speed: 1200, size: 12 });
     }
     if (dmg > 0) {
-      P.hp = Math.max(0, P.hp - dmg); this.stats.dmgTaken += dmg;
-      if (!blocked) { this.breakCombo(); AudioSys.sfx('thud', { x: c.x }); }
+      P.hp = Math.max(0, P.hp - dmg);
       er.flash = 1; er.flashColor = '#ff3a2a';
       Floaters.add('-' + dmg, c.x + rand(-20, 20), c.y - 120, { color: '#ff5a4a', size: 62 });
       if (!blocked) AudioSys.sfx('hurt');
@@ -662,15 +574,10 @@ class BattleScene {
   // ------------------------------------------------------------------ results
   async victory() {
     this.ui.mode = 'end';
-    const grade = this.grade();
-    Music.intensity({ rage: 0, fury: 0 });
     await wait(0.9);
-    AudioSys.stopMusic(0.35); AudioSys.sting('victory');
+    AudioSys.sfx('victory');
     const P = this.P, enc = this.enc;
-    const res = { type: 'win', t: 0, xp: enc.xp, leveled: [], drops: enc.drops, grade };
-    const R = Game.save.ratings || (Game.save.ratings = {}), order = 'SABC';
-    res.best = R[this.encId]; res.newBest = !res.best || order.indexOf(grade) < order.indexOf(res.best);
-    if (res.newBest) R[this.encId] = grade;
+    const res = { type: 'win', t: 0, xp: enc.xp, leveled: [], drops: enc.drops };
     if (!enc.final) {
       P.xp += enc.xp;
       while (P.level < MAX_LEVEL && P.xp >= xpToNext(P.level)) {
@@ -684,14 +591,12 @@ class BattleScene {
     this.result = res;
     await wait(0.3);
     AudioSys.sfx('slam'); shake(18);
-    if (res.leveled.length) wait(1.9).then(() => AudioSys.sting('levelup'));
+    if (res.leveled.length) wait(0.8).then(() => AudioSys.sfx('levelup'));
   }
   async defeat() {
     this.ui.mode = 'end';
-    Music.intensity({ rage: 0, fury: 0 });
-    AudioSys.stopMusic(0.6);
     await tween(this.eric, { rot: -0.5, offY: 40, alpha: 0.6 }, 0.8, Ease.inQuad);
-    AudioSys.sfx('bodyfall'); AudioSys.sting('defeat');
+    AudioSys.sfx('defeat');
     this.result = { type: 'lose', t: 0 };
     await wait(0.3); AudioSys.sfx('slam');
   }
@@ -722,20 +627,6 @@ class BattleScene {
     if (this.furyCine) this.furyCine.t += rdt;
     if (this.result) this.result.t += rdt;
     this.ambient(dt);
-    // v2 feel
-    this.punch.z *= Math.pow(0.004, rdt); if (this.punch.z < 0.001) this.punch.z = 0;
-    for (const b of this.bursts) b.t += rdt;
-    this.bursts = this.bursts.filter(b => b.t < 0.28);
-    for (const f of this.fog) { f.x += f.v * dt; if (f.x > W + 200) f.x = -1300; if (f.x < -1400) f.x = W + 100; }
-    this.comboT += rdt;
-    if (this.block.open) this.block.openT += dt;
-    if (!this.result) {
-      const m = this.P.madness;
-      Music.intensity({ rage: m >= 70 ? clamp((m - 60) / 40, 0, 1) : 0, fury: (this.furyMode || this.furyCine) ? 1 : m >= 100 ? 0.35 : 0 });
-      const hpf = this.P.hp / statsFor(this.P.level).maxHp;
-      this.hbT -= rdt; this.hbFlash = Math.max(0, this.hbFlash - rdt * 2.2);
-      if (hpf > 0 && hpf < 0.3 && this.hbT <= 0) { AudioSys.sfx('heartbeat'); this.hbFlash = 1; this.hbT = hpf < 0.15 ? 0.7 : 0.95; }
-    }
 
     // rage embers
     if (this.P.madness >= 70 && Math.random() < dt * (this.P.madness >= 100 ? 40 : 14)) {
@@ -755,9 +646,8 @@ class BattleScene {
     // block
     if (this.block.armed && (confirmHit() || G.mouse.clicked)) {
       G.mouse.clicked = false;
-      const b = this.block;
-      if (b.open && !b.early) { if (!b.hit && b.openT <= 0.09) b.parry = true; b.hit = true; }
-      else if (!b.open && !b.early) { b.early = true; b.earlyAt = this.t; }
+      if (this.block.open && !this.block.early) this.block.hit = true;
+      else if (!this.block.open) this.block.early = true;
     }
     if (this.ui.mode !== 'end' && this.ui.mode !== 'main' && this.ui.mode !== 'target' && !['axes', 'paper', 'items'].includes(this.ui.mode)) return;
     this.menuKeys();
@@ -845,7 +735,6 @@ class BattleScene {
   draw(c) {
     const t = this.t, er = this.eric;
     c.save();
-    if (this.punch.z > 0) { const p = this.punch; c.translate(p.x, p.y); c.scale(1 + p.z, 1 + p.z); c.translate(-p.x, -p.y); }
     // background with slow drift + shake parallax
     drawCover(c, this.bg, Math.sin(t * 0.07) * 18 + G.cam.sx * 0.4 - er.offX * 0.015, G.cam.sy * 0.4, 1.08);
     if (this.lightning > 0) { c.fillStyle = `rgba(220,230,255,${this.lightning * 0.35})`; c.fillRect(0, 0, W, H); }
@@ -858,7 +747,6 @@ class BattleScene {
     // Fury zoom
     if (this.furyMode) { c.translate(W / 2, H / 2); c.scale(1.04, 1.04); c.translate(-W / 2, -H / 2); }
 
-    this.drawFog(c, 0);
     // enemies behind water
     const ordered = [...this.enemies].sort((a, b) => (a.d.draw === 'kraken' ? -1 : 0) - (b.d.draw === 'kraken' ? -1 : 0) || a.y - b.y);
     for (const e of ordered) this.drawEnemy(c, e);
@@ -872,14 +760,12 @@ class BattleScene {
     }
     for (const p of this.projs) this.drawProj(c, p);
     Slashes.draw(c);
-    this.drawBursts(c);
     for (const s of this.stamps) {
       const k = s.t / 1.1, sc = s.t < 0.14 ? lerp(2.4, 1, Ease.inQuad(s.t / 0.14)) : 1;
       c.save(); c.translate(s.x, s.y); c.rotate(s.rot); c.scale(sc * s.s, sc * s.s); c.globalAlpha = k > 0.7 ? (1 - k) / 0.3 : 1;
       c.drawImage(s.img, -s.img.width / 2, -s.img.height / 2); c.restore();
     }
     Particles.draw(c, 'front');
-    this.drawFog(c, 1);
     c.restore();
 
     // madness red grade
@@ -889,8 +775,6 @@ class BattleScene {
       vignette(c, (this.furyMode ? 0.75 : Math.pow(m, 2) * 0.5) * (0.7 + 0.3 * pulse), '170,10,0');
     }
     vignette(c, 0.55);
-    const hpf = this.P.hp / statsFor(this.P.level).maxHp;
-    if (hpf > 0 && hpf < 0.3 && !this.result) vignette(c, 0.25 + 0.45 * this.hbFlash, '150,0,0');
     Floaters.draw(c);
     this.drawEnemyHUD(c);
     this.drawBubbles(c);
@@ -902,33 +786,6 @@ class BattleScene {
     if (this.result) this.drawResult(c);
   }
 
-  drawFog(c, layer) {
-    const fog = G.img._fog; if (!fog) return;
-    const storm = this.enc.amb === 'storm';
-    c.save(); c.globalCompositeOperation = 'screen';
-    for (let i = 0; i < this.fog.length; i++) {
-      if ((i % 2) !== layer) continue;
-      const f = this.fog[i], y = layer ? 905 : f.y;
-      c.globalAlpha = layer ? 0.32 : (storm ? 0.55 : 0.45);
-      c.drawImage(fog, f.x, y - 130 * f.s, 1000 * f.s, 260 * f.s);
-    }
-    c.restore();
-  }
-  drawBursts(c) {
-    c.save(); c.globalCompositeOperation = 'lighter';
-    for (const b of this.bursts) {
-      const k = b.t / 0.28, a = 1 - k, R = (60 + 160 * Ease.outCubic(k)) * b.s;
-      c.strokeStyle = `rgba(${b.color},${a})`; c.lineCap = 'round';
-      for (let i = 0; i < 12; i++) {
-        const an = b.rot + i * TAU / 12, r0 = R * (i % 2 ? 0.35 : 0.2), r1 = R * (i % 2 ? 0.8 : 1);
-        c.lineWidth = (i % 2 ? 4 : 7) * b.s * a;
-        c.beginPath(); c.moveTo(b.x + Math.cos(an) * r0, b.y + Math.sin(an) * r0); c.lineTo(b.x + Math.cos(an) * r1, b.y + Math.sin(an) * r1); c.stroke();
-      }
-      c.globalAlpha = a * 0.8; const gs = 200 * b.s * (1 - k * 0.5);
-      c.drawImage(glowSprite(`rgba(${b.color},1)`), b.x - gs / 2, b.y - gs / 2, gs, gs); c.globalAlpha = 1;
-    }
-    c.restore();
-  }
   drawDock(c) {
     c.save();
     const y = GROUND - 6;
@@ -1080,19 +937,10 @@ class BattleScene {
       const targeted = ui.mode === 'target' && ui.targetE === e;
       txt(c, e.name, p.x, y - 10, { size: e.d.boss ? 28 : 23, fam: F.head, weight: 700, align: 'center', color: targeted ? '#ffe9a0' : '#fff' });
       bar(c, 'e' + this.enemies.indexOf(e), x, y, w, 16, e.hp, e.maxHp, '#e0553f', '#8c1c12');
-      let ix = x, ly = y + 38;
-      const it = this.intentInfo(e);
-      if (it) {
-        c.save(); c.font = font(19, F.body, 700); const tw = c.measureText(it.text).width + 26; c.restore();
-        const tx = clamp(p.x, tw / 2 + 12, W - tw / 2 - 12);
-        rr(c, tx - tw / 2, ly - 20, tw, 28, 14); c.fillStyle = 'rgba(12,8,6,0.72)'; c.fill();
-        c.strokeStyle = it.color; c.globalAlpha = 0.55; c.lineWidth = 1.5; c.stroke(); c.globalAlpha = 1;
-        txt(c, it.text, tx, ly - 6 + 1, { size: 19, weight: 700, align: 'center', base: 'middle', color: it.color });
-        ly += 30;
-      }
-      if (e.flagged > 0) { txt(c, `⚑ FLAGGED ${e.flagged}`, ix, ly, { size: 19, weight: 700, color: '#ff8a6a' }); ix += 140; }
-      if (e.revealed) txt(c, `Weak: ${TYPE_MOD[e.type].weak.split(' (')[0].split(' —')[0]}`, x, ly + (e.flagged > 0 ? 22 : 0), { size: 19, color: '#ffd28a' });
-      if (e.d.shielded && this.enemies.some(o => o.id === 'tentacle' && o.alive)) txt(c, '◈ SHIELDED by tentacles', p.x, ly + 2, { size: 21, weight: 700, align: 'center', color: '#c9b0ff' });
+      let ix = x;
+      if (e.flagged > 0) { txt(c, `⚑ FLAGGED ${e.flagged}`, ix, y + 38, { size: 19, weight: 700, color: '#ff8a6a' }); ix += 140; }
+      if (e.revealed) txt(c, `Weak: ${TYPE_MOD[e.type].weak.split(' (')[0].split(' —')[0]}`, x, y + (e.flagged > 0 ? 60 : 38), { size: 19, color: '#ffd28a' });
+      if (e.d.shielded && this.enemies.some(o => o.id === 'tentacle' && o.alive)) txt(c, '◈ SHIELDED by tentacles', p.x, y + 40, { size: 21, weight: 700, align: 'center', color: '#c9b0ff' });
       if (targeted) {
         const b = Math.sin(this.t * 8) * 8, cy = y - 54 + b;
         c.save(); c.fillStyle = '#ffcf5a'; c.shadowColor = 'rgba(255,180,60,0.9)'; c.shadowBlur = 16;
@@ -1205,21 +1053,7 @@ class BattleScene {
     if (Math.random() < 0.6) Particles.spawn('glow', rand(0, W), H + 10, 2, { color: 'rgba(255,90,20,0.9)', angle: -Math.PI / 2, spread: 0.3, speed: 900, g: 0, life: 1, layer: 'front' });
   }
 
-  drawCombo(c) {
-    if (!this.combo) return;
-    const x = 28, y = 28, w = 300, h = 74, pop = this.comboT < 0.2 ? 1 + (0.2 - this.comboT) * 1.2 : 1;
-    c.save(); c.translate(x + w / 2, y + h / 2); c.scale(pop, pop); c.translate(-(x + w / 2), -(y + h / 2));
-    panel(c, x, y, w, h, { r: 12, ornaments: false, shadowBlur: 14 });
-    txt(c, `RHYTHM ×${this.combo}`, x + 20, y + 32, { size: 28, fam: F.head, weight: 900, color: '#ffe27a', letter: 1 });
-    txt(c, `+${this.combo * 8}% damage`, x + w - 18, y + 56, { size: 19, weight: 700, align: 'right', base: 'middle', color: C.textDim });
-    for (let i = 0; i < 5; i++) {
-      c.beginPath(); c.arc(x + 30 + i * 30, y + 54, 8, 0, TAU);
-      c.fillStyle = i < this.combo ? '#ffcf5a' : 'rgba(255,255,255,0.12)'; c.fill();
-    }
-    c.restore();
-  }
   drawUI(c) {
-    this.drawCombo(c);
     const ui = this.ui, P = this.P, Y = 868;
     drawStatus(c, 20, Y, { w: 620, h: 196 });
     const active = ['main', 'axes', 'paper', 'items', 'target'].includes(ui.mode);
@@ -1248,7 +1082,7 @@ class BattleScene {
       const hints = ['Swing your axes. Calms Madness. Great vs. ropes, timber & tentacles.', 'Fight forms with forms. Strong vs. paperwork & people — but raises Madness.', 'Use mead, herring, ink and other supplies.', 'Halve incoming damage this turn and regain 8 Focus.', 'Unleash six berserk strikes and a ground slam. Resets Madness.'];
       txt(c, ['AXES', 'PAPERWORK', 'PACK', 'BRACE', 'RED FURY'][ui.sel], ix + 30, Y + 50, { size: 30, fam: F.head, weight: 900, color: C.gold });
       wrapLines(c, hints[ui.sel], iw - 60, font(25)).forEach((l, i) => txt(c, l, ix + 30, Y + 92 + i * 32, { size: 25 }));
-      txt(c, 'Arrows + Enter, or click  •  SPACE to block — instantly to PARRY', ix + 30, Y + 176, { size: 19, color: C.textDim });
+      txt(c, 'Arrows + Enter, or click  •  SPACE to block enemy hits', ix + 30, Y + 176, { size: 19, color: C.textDim });
     } else if (['axes', 'paper', 'items'].includes(ui.mode)) {
       const L = this.menuList(), rh = ui.mode === 'items' ? 33 : 40, y0 = Y + 14;
       L.forEach((row, i) => {
@@ -1309,23 +1143,11 @@ class BattleScene {
         for (const L of r.leveled) lines.push({ text: `LEVEL UP!  Lv ${L}` + (UNLOCKS[L] ? `  —  New skill: ${UNLOCKS[L]}` : ''), color: '#9cf08a' });
         for (const k2 in r.drops) lines.push({ text: `${ITEMS[k2].name}  ×${r.drops[k2]}`, icon: k2 });
         if (this.enc.final) lines.push({ text: 'The Kraken\'s order has been cancelled. Permanently.', color: '#ffd28a' });
-        const S = this.stats;
-        lines.push({ text: `Turns ${S.turns}  ·  Damage taken ${S.dmgTaken}  ·  Perfects ${S.perfects}`, color: C.textDim, small: true });
         const w = 900, h = 120 + lines.length * 54, x = (W - w) / 2, y = 420;
         panel(c, x, y, w, h);
-        if (r.grade && t > 0.8) {
-          const gk = Math.min(1, (t - 0.8) / 0.15), gs = lerp(2.2, 1, Ease.inQuad(gk));
-          if (!r.gradeSfx) { r.gradeSfx = true; AudioSys.sfx('stamp'); shake(8); }
-          const gc = { S: '#ffd24a', A: '#9cf08a', B: '#8cc8ff', C: '#c9b9a0' }[r.grade];
-          c.save(); c.translate(x + w + 20, y + 30); c.rotate(0.12); c.scale(gs, gs); c.globalAlpha = gk * a;
-          c.beginPath(); c.arc(0, 0, 74, 0, TAU); c.fillStyle = 'rgba(20,12,8,0.92)'; c.fill(); c.lineWidth = 6; c.strokeStyle = gc; c.stroke();
-          txt(c, r.grade, 0, 8, { size: 96, fam: F.title, weight: 900, align: 'center', base: 'middle', color: gc });
-          c.restore();
-          txt(c, r.newBest ? 'NEW BEST!' : `Best: ${r.best}`, x + w + 20, y + 132, { size: 22, fam: F.head, weight: 900, align: 'center', color: r.newBest ? '#ffe27a' : C.textDim, alpha: gk });
-        }
         lines.forEach((l, i) => {
           if (l.icon) Art.icon.item(c, x + 70, y + 64 + i * 54, l.icon);
-          txt(c, l.text, l.icon ? x + 110 : W / 2, y + 74 + i * 54, { size: l.small ? 24 : 32, fam: l.small ? F.body : F.head, weight: 700, align: l.icon ? 'left' : 'center', color: l.color || C.text });
+          txt(c, l.text, l.icon ? x + 110 : W / 2, y + 74 + i * 54, { size: 32, fam: F.head, weight: 700, align: l.icon ? 'left' : 'center', color: l.color || C.text });
         });
         if (t > 1.0 && (button(c, 'cont', W / 2 - 140, y + h + 30, 280, 66, 'Continue') || confirmHit())) { if (!r.leaving) { r.leaving = true; this.done(true); } }
       } else {

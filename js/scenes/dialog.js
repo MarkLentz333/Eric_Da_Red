@@ -182,7 +182,7 @@ class BannerOverlay {
     c.restore();
   }
 }
-const Banner = { show(small, big) { return new Promise(res => { G.overlay = new BannerOverlay(small, big, res); AudioSys.sfx('slam'); AudioSys.sting('chapter'); }); } };
+const Banner = { show(small, big) { return new Promise(res => { G.overlay = new BannerOverlay(small, big, res); AudioSys.sfx('slam'); }); } };
 
 // ---------------------------------------------------------------- notice (rewards etc.)
 class NoticeOverlay {

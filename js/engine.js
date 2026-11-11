@@ -120,8 +120,6 @@ function updateAsync(dt) {
 function shake(v) { G.cam.shake = Math.max(G.cam.shake, v); }
 function hitstop(s) { G.hitstop = Math.max(G.hitstop, s); }
 function screenFlash(color = '#fff', a = 0.6) { G.flash.color = color; G.flash.a = Math.max(G.flash.a, a); }
-// slowmo(0.3, 0.8): run game time at 30% for 0.8 real seconds, then ease back to normal
-function slowmo(scale, dur) { G.timeScale = scale; G._slowT = dur; }
 
 // ---------------------------------------------------------------- assets
 function loadImages(map, onProgress) {
@@ -425,48 +423,23 @@ const Floaters = {
 // ============================================================================
 //  SCENE MANAGEMENT + LOOP
 // ============================================================================
-// style: 'fade' (default) or 'slash' (diagonal axe-cut wipe, used to enter battles)
-function goto(scene, fadeTime = 0.45, style = 'fade') {
+function goto(scene, fadeTime = 0.45) {
   return new Promise(res => {
-    G.fade.target = 1; G.fade.speed = 1 / fadeTime; G.fade.style = style;
+    G.fade.target = 1; G.fade.speed = 1 / fadeTime;
     G.fade.cb = () => {
       if (G.scene && G.scene.exit) G.scene.exit();
       clearAsync(); Particles.clear(); Floaters.clear();
-      G.cam.zoom = 1; G.cam.shake = 0; G.timeScale = 1; G._slowT = 0; G.hitstop = 0;
+      G.cam.zoom = 1; G.cam.shake = 0; G.timeScale = 1; G.hitstop = 0;
       G.scene = scene; scene.enter && scene.enter();
       G.fade.target = 0; res();
     };
   });
 }
 
-// Two black blades close in along a diagonal cut, with a hot red seam where they meet.
-function drawSlashWipe(c, a) {
-  const k = Ease.inOutCubic(clamp(a, 0, 1));
-  const ang = -1.15, dx = Math.cos(ang), dy = Math.sin(ang);   // direction of the cut line
-  const nx = -dy, ny = dx;                                      // normal
-  const cx = W / 2, cy = H / 2, L = 2600, open = (1 - k) * 1500;
-  c.save();
-  for (const side of [-1, 1]) {
-    const ox = cx + nx * side * open, oy = cy + ny * side * open;
-    c.beginPath();
-    c.moveTo(ox - dx * L, oy - dy * L); c.lineTo(ox + dx * L, oy + dy * L);
-    c.lineTo(ox + dx * L + nx * side * L, oy + dy * L + ny * side * L); c.lineTo(ox - dx * L + nx * side * L, oy - dy * L + ny * side * L);
-    c.closePath(); c.fillStyle = '#060303'; c.fill();
-    if (k < 0.995) {
-      c.beginPath(); c.moveTo(ox - dx * L, oy - dy * L); c.lineTo(ox + dx * L, oy + dy * L);
-      c.strokeStyle = `rgba(255,70,20,${0.9 * (1 - k * 0.6)})`; c.lineWidth = 10; c.shadowColor = '#ff3a10'; c.shadowBlur = 40; c.stroke();
-      c.strokeStyle = 'rgba(255,230,190,0.9)'; c.lineWidth = 2.5; c.shadowBlur = 0; c.stroke();
-    }
-  }
-  c.restore();
-}
-
 let _last = performance.now();
 function frame(now) {
   const rdt = Math.min(0.05, (now - _last) / 1000); _last = now;
   G.rt += rdt;
-  if (G._slowT > 0) { G._slowT -= rdt; if (G._slowT <= 0) G.timeScale = 1; }
-  else if (G.timeScale < 1) G.timeScale = Math.min(1, G.timeScale + rdt * 3);
   let dt = rdt * G.timeScale;
   if (G.hitstop > 0) { G.hitstop -= rdt; dt = 0; }
   G.dt = dt; G.t += dt;
@@ -503,10 +476,7 @@ function frame(now) {
     ctx.globalAlpha = G.flash.a; ctx.fillStyle = G.flash.color; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
     G.flash.a = Math.max(0, G.flash.a - rdt * 3);
   }
-  if (fd.a > 0) {
-    if (fd.style === 'slash') drawSlashWipe(ctx, fd.a);
-    else { ctx.globalAlpha = fd.a; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
-  }
+  if (fd.a > 0) { ctx.globalAlpha = fd.a; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
 
   if (!G._hoverSeen) G.hoverId = null;
   G.mouse.clicked = false; G.pressed = {}; G.anyPressed = false;

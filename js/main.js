@@ -22,23 +22,22 @@ const Game = {
       const d = JSON.parse(localStorage.getItem(SAVE_KEY));
       if (!d) return false;
       this.player = Object.assign(newPlayer(), d.player);
-      this.save = Object.assign({ cleared: {}, at: 'home', ratings: {} }, d.save);
-      if (!this.save.ratings) this.save.ratings = {};
+      this.save = Object.assign({ cleared: {}, at: 'home' }, d.save);
       return true;
     } catch (e) { return false; }
   },
   async newGame() {
     this.player = newPlayer();
-    this.save = { cleared: {}, at: 'home', ratings: {} };
+    this.save = { cleared: {}, at: 'home' };
     this.persist();
-    this.mapScene = new WorldScene();
+    this.mapScene = new MapScene();
     await goto(this.mapScene, 0.8);
     await wait(0.6);
     this.runNode(NODE.home);
   },
   async continueGame() {
     if (!this.load()) return this.newGame();
-    this.mapScene = new WorldScene();
+    this.mapScene = new MapScene();
     await goto(this.mapScene, 0.6);
     if (!this.save.cleared.home) { await wait(0.4); this.runNode(NODE.home); }
   },
@@ -63,13 +62,11 @@ const Game = {
   },
   startBattle(encId) {
     return new Promise(res => {
-      // war horn + axe-slash wipe into the fight
-      AudioSys.stopMusic(0.4); AudioSys.sting('battleStart'); AudioSys.sfx('heavySwing');
       goto(new BattleScene(encId, async won => {
         if (ENCOUNTERS[encId].final && won) { res(won); return; }
         await goto(this.mapScene);
         res(won);
-      }), 0.55, 'slash');
+      }));
     });
   },
   async runNode(n) {
@@ -96,7 +93,7 @@ const Game = {
       } else if (n.type === 'rest') {
         await Dialog.play(first ? n.script : n.again);
         this.restore();
-        AudioSys.sfx('heal'); AudioSys.sting('rest');
+        AudioSys.sfx('heal');
         const lines = [{ text: 'HP, Focus restored. Madness calmed.', color: '#9cf08a' }];
         if (first && n.reward) lines.push(...this.give(n.reward));
         await Notice.show(first ? 'Rested & Resupplied' : 'Rested', lines);
@@ -104,7 +101,7 @@ const Game = {
         await Dialog.play(n.script);
         const lines = this.give(n.reward);
         if (n.heal) { this.restore(); lines.unshift({ text: 'HP, Focus restored. Madness calmed.', color: '#9cf08a' }); }
-        AudioSys.sfx('coin'); AudioSys.sting('treasure');
+        AudioSys.sfx('coin');
         await Notice.show('Found!', lines);
       }
       this.save.cleared[n.id] = true;
@@ -150,19 +147,11 @@ const LoadingScene = {
   if (q.get('level')) { Game.player.level = +q.get('level'); Game.restore(); }
   if (q.get('mad')) Game.player.madness = +q.get('mad');
   if (q.has('battle')) {
-    Game.mapScene = new WorldScene();
-    Game.save.ratings = Game.save.ratings || {};
+    Game.mapScene = new MapScene();
     goto(new BattleScene(q.get('battle'), async () => { await goto(Game.mapScene); }), 0.2);
-  } else if (q.has('map') || q.has('oldmap')) {
-    // ?map = walkable world (v3); ?oldmap = the classic node map.  ?clear=docks,boat,... marks nodes cleared; ?at=x,y places Eric
+  } else if (q.has('map')) {
     if (!Game.load()) { Game.save.cleared.home = true; }
-    if (q.get('clear')) for (const id of q.get('clear').split(',')) Game.save.cleared[id] = true;
-    if (q.get('at')) { const [x, y] = q.get('at').split(',').map(Number); Game.save.pos = { x, y }; }
-    Game.mapScene = q.has('oldmap') ? new MapScene() : new WorldScene(); goto(Game.mapScene, 0.2);
-  } else if (q.has('hall')) {
-    Game.mapScene = new WorldScene(); goto(new MeadHallScene(), 0.2);
-  } else if (q.has('axes')) {
-    Game.mapScene = new WorldScene(); goto(new AxeThrowScene(), 0.2);
+    Game.mapScene = new MapScene(); goto(Game.mapScene, 0.2);
   } else if (q.has('tavern')) {
     goto(new TavernScene(), 0.2);
   } else if (q.has('cut')) {
