@@ -8,3 +8,5 @@ __pycache__/
 node_modules/
 *.tmp
 Trailer/*_video.mp4
+# drop folder for new art from the user (copied into source_art/ once processed)
+NewCharactersAdded/

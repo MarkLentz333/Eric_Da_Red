@@ -6,12 +6,13 @@ Pushing to `main` redeploys the site in about a minute.
 
 ## Run / test
 - Local: `python tools/serve.py --no-browser` serves on http://127.0.0.1:8642 (it also rewrites `js/music_manifest.js`).
-- Debug URLs: `?battle=<enc>&level=N&mad=N`, `?map`, `?ending`, `?tavern`, `?cut=<name>`, `?nosplash`, `?auto` (perfect QTEs/blocks).
+- Debug URLs: `?battle=<enc>&level=N&mad=N`, `?map` (walkable world; add `&clear=docks,boat,...` and `&at=x,y`), `?oldmap` (v2 node map),
+  `?hall` (mead hall), `?axes` (axe range), `?ending`, `?tavern`, `?cut=<name>`, `?nosplash`, `?auto` (perfect QTEs/blocks).
 - Verify visually with headless Chrome via puppeteer-core (Chrome at `C:/Program Files/Google/Chrome/Application/chrome.exe`).
   Take screenshots and check for console errors after every change.
 
 ## Flow of the game
-Splash (`splash.js`) → Title → Map (`map.js`, 12 NODES in `data.js`) → `Game.runNode` (banner → cutscene → dialog → battle → dialog)
+Splash (`splash.js`) → Title → World (`world.js`, the walkable overworld; story NODES from `data.js` are placed by `WORLD_NODES`) → `Game.runNode` (banner → cutscene → dialog → battle → dialog)
 → final Kraken battle → `EndingScene` (cut_ending video + dialog) → `TavernScene` (cut_tavern_1..4 videos, or the in-engine
 fallback) → ledger roll / THE END.
 - Story text, enemies, encounters and speakers are all in `js/data.js` (`SCRIPTS`, `ENEMIES`, `ENCOUNTERS`, `SPEAKERS`, `NODES`, `IMAGES`).
@@ -25,7 +26,19 @@ fallback) → ledger roll / THE END.
 - v2 battle systems: enemy intents (`planIntents`/`intentInfo`), parry (press within 0.09 s of the `!`, or a hair early, for a counter),
   Rhythm combo (+8% damage per stack, max 5), and S/A/B/C ratings (`ENCOUNTERS[].par`, best grade per fight in `Game.save.ratings`).
   There's also camera punch, `slowmo()`, and `goto(scene, t, 'slash')` for the battle wipe.
-- v1 is preserved as git tag `v1.0` / branch `backup/v1`. Plans and asset prompts are in `docs/V2_PLAN.txt` and `docs/V2_ASSET_PROMPTS.txt`.
+- v3 overworld (`js/world_data.js` + `js/scenes/world.js`): 5200x3200 world, camera follows Eric, WASD/arrows/click-to-move, E to interact,
+  M big map with fast travel, minimap, objective arrow. Terrain is drawn procedurally (WATER polygons, ROADS splines, seeded trees).
+  Props come from `assets/world/` (map props with the diorama soil base stripped). The east tree-line has a gate that opens when the
+  Forest Road is unlocked, and the river is crossed by the bridge once it's cleared. Also: villagers (`WORLD_NPCS`, recolored placeholders
+  until real art arrives; `npc_<id>` images override them), roaming skirmishes (`SKIRMISHES`, `sk_*` encounters), hidden `CACHES`.
+- Side content: `axethrow.js` (Bjarni's range, best score + prizes) and `meadhall.js` (The Drunken Goat, an interactive tavern with the
+  user's real-life coworkers as characters: Darrell = Eric's boss, gives `DISPATCH` side quests; Thomas = VP of Ops, negative, ends
+  lines with "huh?" and says "Make it happen"; Nichole = office manager, always helpful: heals, gifts, hints, reveals caches).
+  First visit plays `cut_crew.mp4`. Their sprites/portraits were cut from turnaround sheets in `source_art/Character/` (`Create_3D_*.jpg`).
+- Save fields added in v3: `pos`, `skirm`, `found`, `axeBest`, `axePrize`, `q` (mead hall quest state), `revealCaches`.
+- v1 = tag `v1.0` / branch `backup/v1`; v2 = branch `v2`. Art/video/music wishlist: `docs/ASSET_PROMPTS.txt`. New art drops into
+  `NewCharactersAdded/` (gitignored). Turnaround sheets on a dark-gray background cut out well (see the cut script approach:
+  smooth-background fit + GrabCut).
 
 ## Art pipeline (Python + OpenCV)
 - Source art is in `source_art/` (Character, Objects, Backgrounds). Game-ready cutouts are in `assets/`.

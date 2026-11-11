@@ -31,14 +31,14 @@ const Game = {
     this.player = newPlayer();
     this.save = { cleared: {}, at: 'home', ratings: {} };
     this.persist();
-    this.mapScene = new MapScene();
+    this.mapScene = new WorldScene();
     await goto(this.mapScene, 0.8);
     await wait(0.6);
     this.runNode(NODE.home);
   },
   async continueGame() {
     if (!this.load()) return this.newGame();
-    this.mapScene = new MapScene();
+    this.mapScene = new WorldScene();
     await goto(this.mapScene, 0.6);
     if (!this.save.cleared.home) { await wait(0.4); this.runNode(NODE.home); }
   },
@@ -150,12 +150,19 @@ const LoadingScene = {
   if (q.get('level')) { Game.player.level = +q.get('level'); Game.restore(); }
   if (q.get('mad')) Game.player.madness = +q.get('mad');
   if (q.has('battle')) {
-    Game.mapScene = new MapScene();
+    Game.mapScene = new WorldScene();
     Game.save.ratings = Game.save.ratings || {};
     goto(new BattleScene(q.get('battle'), async () => { await goto(Game.mapScene); }), 0.2);
-  } else if (q.has('map')) {
+  } else if (q.has('map') || q.has('oldmap')) {
+    // ?map = walkable world (v3); ?oldmap = the classic node map.  ?clear=docks,boat,... marks nodes cleared; ?at=x,y places Eric
     if (!Game.load()) { Game.save.cleared.home = true; }
-    Game.mapScene = new MapScene(); goto(Game.mapScene, 0.2);
+    if (q.get('clear')) for (const id of q.get('clear').split(',')) Game.save.cleared[id] = true;
+    if (q.get('at')) { const [x, y] = q.get('at').split(',').map(Number); Game.save.pos = { x, y }; }
+    Game.mapScene = q.has('oldmap') ? new MapScene() : new WorldScene(); goto(Game.mapScene, 0.2);
+  } else if (q.has('hall')) {
+    Game.mapScene = new WorldScene(); goto(new MeadHallScene(), 0.2);
+  } else if (q.has('axes')) {
+    Game.mapScene = new WorldScene(); goto(new AxeThrowScene(), 0.2);
   } else if (q.has('tavern')) {
     goto(new TavernScene(), 0.2);
   } else if (q.has('cut')) {
