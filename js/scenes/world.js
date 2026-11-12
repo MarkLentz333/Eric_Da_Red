@@ -5,7 +5,9 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 168, ERIC_R = 22, WALK = 400, ZOOM = 1.14;
+const ERIC_H = 186, ERIC_R = 22, WALK = 330, ZOOM = 1.12;
+// filmed walk cycles (tools/walk/extract_walk.py -> js/walk_data.js); SIDE_IDLE = side frame with the feet together
+const SIDE_IDLE = 27;
 // paper-doll rig for the overworld walk cycle (parts cut by tools/rig/rig_eric.py; sprite-pixel pivots)
 const RIG = {
   front: { w: 365, h: 682, armL: [70, 202], armR: [295, 202], legL: [125, 462], legR: [240, 462], relax: 0.11 },
@@ -137,13 +139,13 @@ class WorldScene extends MapScene {
       { x0: 700, x1: 2700, y0: 60, y1: 760, n: 70, mix: ['pines', 'oak', 'willow2', 'pine2'] },              // northern woods
       { x0: 2200, x1: 2720, y0: 2300, y1: 3150, n: 40, mix: ['oak', 'willow', 'pines'] },                    // south meadow edge
       { x0: 4330, x1: 4860, y0: 60, y1: 3150, n: 55, mix: ['pines', 'pine2', 'willow'] },                    // east bank
-      { x0: 1500, x1: 2700, y0: 760, y1: 2300, n: 26, mix: ['oak', 'willow2', 'willow'] },                   // town greenery
+      { x0: 1500, x1: 2700, y0: 760, y1: 2300, n: 7, mix: ['oak'] },                                        // a few shade oaks in town
     ];
     for (const z of zones) {
       let placed = 0, tries = 0;
       while (placed < z.n && tries++ < z.n * 30) {
         const x = z.x0 + R() * (z.x1 - z.x0), y = z.y0 + R() * (z.y1 - z.y0);
-        if (wet(x, y, 70) || nearRoad(x, y, 110) || !clear(x, y) || Math.abs(x - TREELINE.x) < 90) continue;
+        if (wet(x, y, 70) || nearRoad(x, y, 140) || !clear(x, y, 30) || Math.abs(x - TREELINE.x) < 90) continue;
         if (this.sprites.some(s => s.tree && Math.hypot(s.x - x, (s.y - y) * 1.6) < 95)) continue;
         const k = z.mix[Math.floor(R() * z.mix.length)];
         addTree(x, y, k, k.startsWith('pine') ? 280 + R() * 90 : 250 + R() * 80);
@@ -245,8 +247,8 @@ class WorldScene extends MapScene {
     if (!this.built) this.build();
     this.t = 0; this.pack = false; this.menu = false; this.bigmap = false; this.hover = null;
     const pos = Game.save.pos, home = WORLD_NODES.home;
-    this.e = { x: pos ? pos.x : home.ix - 40, y: pos ? pos.y : home.iy + 140, dir: 'front', flip: false, phase: 0, moving: false, step: 0 };
-    this.target = null; this.focus = null; this.autoArm = false; this.armT = 1.5;
+    this.e = { x: pos ? pos.x : home.ix - 40, y: pos ? pos.y : home.iy + 140, dir: 'front', flip: false, anim: 0, vx: 0, vy: 0, moving: false };
+    this.target = null; this.focus = null; this.autoArm = false; this.armT = 1.5; this.puffs = []; this.look = { x: 0, y: 0 };
     this.cam = { x: 0, y: 0 }; this.snapCam();
     this.region = this.regionAt(this.e.x, this.e.y); this.regionT = 3.2;
     for (const s of this.skirm) { s.x = s.d.x; s.y = s.d.y; s.chase = false; }
@@ -423,6 +425,7 @@ class WorldScene extends MapScene {
   update(dt) {
     this.t += dt;
     const e = this.e;
+    for (const p of this.puffs) p.t += dt; this.puffs = this.puffs.filter(p => p.t < 0.7);
     for (const cl of this.cloudShadows) { cl.x += cl.v * dt; if (cl.x > WORLD.w + cl.s) { cl.x = -cl.s; cl.y = rand(0, WORLD.h); } }
     if (Math.random() < dt * 4) Particles.ambient('glow', { x: 0, y: H, w: W, h: 10 }, { vy: rand(-40, -15), color: 'rgba(255,190,110,0.7)', size: 3, sizeMin: 1, life: rand(5, 9), layer: 'front' });
     const busy = G.overlay || Game.busy || this.pack || this.menu || G.fade.a > 0.05;
@@ -453,26 +456,34 @@ class WorldScene extends MapScene {
         if (u) { u.act(); return; }
       } else { vx = dx / d; vy = dy / d; }
     }
-    const len = Math.hypot(vx, vy);
-    e.moving = false;
-    if (len > 0) {
-      vx /= len; vy /= len;
-      const sp = WALK * (G.keys.ShiftLeft || G.keys.ShiftRight ? 1.45 : 1) * dt;
-      const moved = this.tryMove(e, vx * sp, vy * sp);
-      if (!moved && this.target) this.target = null;
+    const len = Math.hypot(vx, vy), run = !!(G.keys.ShiftLeft || G.keys.ShiftRight);
+    if (len > 0) { vx /= len; vy /= len; }
+    const want = len > 0 ? WALK * (run ? 1.5 : 1) : 0, k = Math.min(1, dt * (len > 0 ? 12 : 16));
+    e.vx = lerp(e.vx || 0, vx * want, k); e.vy = lerp(e.vy || 0, vy * want, k);
+    const spd = Math.hypot(e.vx, e.vy);
+    e.moving = false; e.run = run && spd > WALK * 1.1;
+    if (spd > 25) {
+      const moved = this.tryMove(e, e.vx * dt, e.vy * dt);
+      if (!moved) { if (this.target) this.target = null; e.vx *= 0.3; e.vy *= 0.3; }
       e.moving = moved;
-      if (Math.abs(vx) > Math.abs(vy) * 1.2) { e.dir = 'q34'; e.flip = vx < 0; }
-      else if (vy < 0) e.dir = 'back';
-      else e.dir = Math.abs(vx) > 0.35 ? 'q34' : 'front';
-      if (e.dir === 'q34') e.flip = vx < 0;
+      const ax = Math.abs(e.vx), ay = Math.abs(e.vy);
+      if (e.dir === 'side' ? ax > ay * 0.75 : ax > ay * 1.3) { e.dir = 'side'; e.flip = e.vx < 0; }
+      else e.dir = e.vy < 0 ? 'back' : 'front';
       if (moved) {
-        e.phase += dt * (G.keys.ShiftLeft || G.keys.ShiftRight ? 13 : 10);
-        if (Math.floor(e.phase / Math.PI) !== e.step) { e.step = Math.floor(e.phase / Math.PI); AudioSys.sfx('step', { x: e.x - this.cam.x }); }
+        const prev = e.anim || 0;
+        e.anim = prev + dt * spd / (ERIC_H * (run ? 1.35 : 1.05));      // one filmed cycle (two steps) per stride
+        if (Math.floor(e.anim * 2) !== Math.floor(prev * 2)) {
+          AudioSys.sfx('step', { x: e.x - this.cam.x });
+          this.puffs.push({ x: e.x + (Math.floor(e.anim * 2) % 2 ? 9 : -9), y: e.y - 2, t: 0, big: e.run });
+        }
       }
     }
-    // camera
+    // camera: leads a little in the walking direction, eases smoothly
     const [tx, ty] = this.camTarget();
-    this.cam.x += (tx - this.cam.x) * Math.min(1, dt * 5); this.cam.y += (ty - this.cam.y) * Math.min(1, dt * 5);
+    this.look = this.look || { x: 0, y: 0 };
+    this.look.x = lerp(this.look.x, (e.vx || 0) * 0.32, Math.min(1, dt * 2)); this.look.y = lerp(this.look.y, (e.vy || 0) * 0.22, Math.min(1, dt * 2));
+    const lx = clamp(tx + this.look.x, 0, WORLD.w - this.vw), ly = clamp(ty + this.look.y, 0, WORLD.h - this.vh);
+    this.cam.x += (lx - this.cam.x) * Math.min(1, dt * 4); this.cam.y += (ly - this.cam.y) * Math.min(1, dt * 4);
     // region banner
     const rg = this.regionAt(e.x, e.y);
     if (rg[0] !== this.region[0]) { this.region = rg; this.regionT = 3.2; AudioSys.sfx('whoosh'); }
@@ -498,7 +509,13 @@ class WorldScene extends MapScene {
       n.t += dt;
       const dE = Math.hypot(n.x - this.e.x, n.y - this.e.y);
       n.moving = false;
-      if (dE < 200 || busy || !n.d.wander) { if (dE < 300) n.face = this.e.x < n.x ? -1 : 1; continue; }
+      if (n.bubble) { n.bubble.t -= dt; if (n.bubble.t <= 0) n.bubble = null; }
+      if (n.d.barks && !busy && dE < 330 && (!n.lastBark || n.t - n.lastBark > 30) && !this.npcs.some(o => o.bubble && o !== n)) {
+        n.lastBark = n.t; n.barkI = (n.barkI === undefined ? -1 : n.barkI) + 1;
+        n.bubble = { text: n.d.barks[n.barkI % n.d.barks.length], t: 4.5 };
+        AudioSys.sfx('blip', { x: n.x - this.cam.x });
+      }
+      if (dE < 200 || busy || !n.d.wander) { if (dE < 300 && !n.d.maiden) n.face = this.e.x < n.x ? -1 : 1; continue; }
       const dx = n.tx - n.x, dy = n.ty - n.y, d = Math.hypot(dx, dy);
       if (d < 6) {
         n.wait -= dt;
@@ -613,8 +630,9 @@ class WorldScene extends MapScene {
     c.save(); c.globalAlpha = a; c.fillStyle = '#000';
     c.beginPath(); c.ellipse(x, y, w, w * 0.32, 0, 0, TAU); c.fill(); c.restore();
   }
+  pimg(sp) { return (sp.img.startsWith('w_') && G.img['b_' + sp.img.slice(2)]) || G.img[sp.img]; }
   drawProp(c, sp, fade = 1) {
-    const img = G.img[sp.img]; if (!img) return null;
+    const img = this.pimg(sp); if (!img) return null;
     const s = sp.h / img.height, w = img.width * s;
     if (sp.x + w / 2 < this.cam.x - 50 || sp.x - w / 2 > this.cam.x + this.vw + 50 || sp.y - sp.h > this.cam.y + this.vh + 50 || sp.y < this.cam.y - 50) return null;
     let lockTint = false;
@@ -699,12 +717,31 @@ class WorldScene extends MapScene {
     if (flip) c.scale(-1, 1);
     c.drawImage(sh, -w / 2, -h, w, h); c.restore();
   }
+  // current walk-sheet frame for Eric: { img, sx, sy, flip }
+  ericFrame() {
+    const e = this.e, WS = typeof WALK_SHEETS !== 'undefined' ? WALK_SHEETS : null; if (!WS) return null;
+    const key = e.dir === 'back' ? 'eric_up' : e.dir === 'side' ? 'eric_side' : 'eric_down';
+    const sheet = G.img['walk_' + key]; let img = sheet, i = 0;
+    if (e.moving) i = Math.floor((((e.anim % 1) + 1) % 1) * WS.frames[key]);
+    else if (e.dir === 'side') i = SIDE_IDLE;
+    else img = G.img['walk_' + key + '_idle'] || sheet;
+    if (!img) return null;
+    if (img !== sheet) return { img, sx: 0, sy: 0, flip: false };
+    return { img, sx: (i % WS.cols) * WS.fw, sy: Math.floor(i / WS.cols) * WS.fh, flip: e.dir === 'side' && e.flip };
+  }
+  blitFrame(c, f, h, sil = false) {
+    const WS = WALK_SHEETS, s = h / WS.body;
+    c.scale(s * (f.flip ? -1 : 1), s);
+    c.drawImage(sil ? tinted(f.img, '#000') : f.img, f.sx, f.sy, WS.fw, WS.fh, -WS.fw / 2, -WS.ay, WS.fw, WS.fh);
+  }
   drawEric(c, alpha = 1) {
-    const e = this.e, dir = e.dir === 'side' ? 'q34' : e.dir;
-    const parts = this.ericParts(dir);
+    const e = this.e, f = this.ericFrame();
     if (alpha === 1) this.drawShadow(c, e.x, e.y, 30, 0.4);
-    e.amt = lerp(e.amt || 0, e.moving ? 1 : 0, Math.min(1, G.dt * 10));
-    if (parts) { this.drawRigged(c, e.x, e.y, ERIC_H, dir, parts, e.phase, e.amt, dir === 'q34' && e.flip, this.t, alpha); return; }
+    if (f) {
+      const breathe = e.moving ? 1 : 1 + Math.sin(this.t * 2.2) * 0.007;
+      c.save(); c.globalAlpha = alpha; c.translate(e.x, e.y); c.scale(1, breathe); this.blitFrame(c, f, ERIC_H); c.restore();
+      return;
+    }
     const img = G.img.eric_front; if (!img) return;
     const w = img.width * ERIC_H / img.height; c.save(); c.globalAlpha = alpha; c.drawImage(img, e.x - w / 2, e.y - ERIC_H, w, ERIC_H); c.restore();
   }
@@ -722,8 +759,8 @@ class WorldScene extends MapScene {
     const rig = this.npcRig(n);
     n.amt = lerp(n.amt || 0, n.moving ? 1 : 0, Math.min(1, G.dt * 8));
     if (rig) { this.drawRigged(c, n.x, n.y, h, rig.dir, rig.parts, n.t * (d.fast ? 13 : 8), n.amt, n.face < 0, n.t + n.d.x); return { base: n.y }; }
-    const s = h / img.height, w = img.width * s;
-    c.save(); c.translate(n.x, n.y); c.scale(n.face < 0 ? -1 : 1, 1); c.drawImage(img, -w / 2, -h, w, h); c.restore();
+    const s = h / img.height, w = img.width * s, br = 1 + Math.sin(n.t * 2 + n.d.x) * 0.008;
+    c.save(); c.translate(n.x, n.y); c.scale(n.face < 0 ? -1 : 1, br); c.drawImage(img, -w / 2, -h, w, h); c.restore();
     return { base: n.y };
   }
   drawSkirm(c, s) {
@@ -793,16 +830,21 @@ class WorldScene extends MapScene {
     const vx0 = cx - 300, vx1 = cx + this.vw + 300, vy0 = cy - 200, vy1 = cy + this.vh + 500;
     for (const sp of this.sprites) {
       if (sp.ground || sp.kind === 'range' || sp.x < vx0 || sp.x > vx1 || sp.y < vy0 || sp.y > vy1) continue;
-      const img = G.img[sp.img]; if (!img) continue;
+      const img = this.pimg(sp); if (!img) continue;
       this.castShadow(c, img, sp.x, sp.y, img.width * sp.h / img.height, sp.h, false, sp.tree ? 0.24 : 0.18);
     }
-    { const ei = G.img[{ front: 'eric_front', back: 'eric_back', q34: 'eric', side: 'eric' }[this.e.dir]]; if (ei) this.castShadow(c, ei, this.e.x, this.e.y, ei.width * ERIC_H / ei.height, ERIC_H, false, 0.24); }
+    { const f = this.ericFrame(); if (f) { c.save(); c.globalAlpha = 0.24; c.translate(this.e.x, this.e.y); c.transform(1, 0, -0.62, -0.28, 0, 0); this.blitFrame(c, f, ERIC_H, true); c.restore(); } }
+    // footstep dust
+    for (const p of this.puffs) {
+      const a = 1 - p.t / 0.7; if (a <= 0) continue;
+      c.fillStyle = `rgba(150,130,95,${(p.big ? 0.32 : 0.16) * a})`; c.beginPath(); c.ellipse(p.x, p.y, 8 + p.t * (p.big ? 46 : 28), 4 + p.t * (p.big ? 16 : 10), 0, 0, TAU); c.fill();
+    }
     for (const n of this.npcs) { const im = this.npcBody(n); if (im && n.x > vx0 && n.x < vx1 && n.y > vy0 && n.y < vy1) { const h = ERIC_H * (n.d.scale || 1); this.castShadow(c, im, n.x, n.y, im.width * h / im.height, h, false, 0.24); } }
     // depth-sorted world
     const list = [];
     const fadeFor = sp => {   // tall things in front of Eric go see-through so he's never lost behind them
       if (!(sp.tree || sp.big) || sp.y <= this.e.y + 8) return 1;
-      const img = G.img[sp.img]; if (!img) return 1;
+      const img = this.pimg(sp); if (!img) return 1;
       const w = img.width * sp.h / img.height, ex = this.e.x, ey = this.e.y - ERIC_H * 0.45;
       return ex > sp.x - w * 0.38 && ex < sp.x + w * 0.38 && ey > sp.y - sp.h * 0.95 && ey < sp.y - sp.h * 0.12 ? 0.3 : 1;
     };
@@ -830,7 +872,7 @@ class WorldScene extends MapScene {
     gr.addColorStop(0, 'rgba(255,190,110,0.12)'); gr.addColorStop(0.6, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(40,50,90,0.16)');
     c.fillStyle = gr; c.fillRect(0, 0, W, H);
     Particles.draw(c, 'back');
-    vignette(c, 0.55);
+    vignette(c, 0.36);
     this.drawHud(c);
     Particles.draw(c, 'front');
     if (this.bigmap) this.drawBigMap(c);
@@ -847,6 +889,21 @@ class WorldScene extends MapScene {
       c.font = font(22, F.head, 700); const tw = c.measureText(n.d.name).width;
       rr(c, n.x - tw / 2 - 14, n.y - h - 30, tw + 28, 34, 17); c.fillStyle = 'rgba(12,9,6,0.72)'; c.fill();
       txt(c, n.d.name, n.x, n.y - h - 12, { size: 22, fam: F.head, weight: 700, align: 'center', base: 'middle', color: '#f0e2c4' });
+      c.restore();
+    }
+    // shieldmaiden greetings: speech bubbles over their heads
+    for (const n of this.npcs) {
+      if (!n.bubble) continue;
+      const a = clamp(Math.min(n.bubble.t, 4.5 - n.bubble.t) * 4, 0, 1), h = ERIC_H * (n.d.scale || 1) + (this.focus && this.focus.npc === n ? 150 : 74);
+      c.save(); c.globalAlpha = a; c.font = font(21, F.body, 600);
+      const words = n.bubble.text.split(' '), lines = []; let cur = '';
+      for (const w of words) { const t = cur ? cur + ' ' + w : w; if (c.measureText(t).width > 330 && cur) { lines.push(cur); cur = w; } else cur = t; }
+      lines.push(cur);
+      const bw = Math.max(...lines.map(l => c.measureText(l).width)) + 36, bh = lines.length * 27 + 22, bx = n.x - bw / 2, by = n.y - h - bh - (1 - a) * 12;
+      rr(c, bx, by, bw, bh, 14); c.fillStyle = 'rgba(255,248,236,0.96)'; c.fill(); c.lineWidth = 2.5; c.strokeStyle = '#b44a5a'; c.stroke();
+      c.beginPath(); c.moveTo(n.x - 12, by + bh - 1); c.lineTo(n.x, by + bh + 16); c.lineTo(n.x + 12, by + bh - 1); c.closePath(); c.fillStyle = 'rgba(255,248,236,0.96)'; c.fill();
+      lines.forEach((l, i) => txt(c, l, n.x, by + 24 + i * 27, { size: 21, fam: F.body, weight: 600, align: 'center', base: 'middle', color: '#3a1a14' }));
+      txt(c, '\u2665', bx + bw - 6, by + 4, { size: 24, align: 'center', base: 'middle', color: '#d0405a' });
       c.restore();
     }
     // objective chevron (on-screen)

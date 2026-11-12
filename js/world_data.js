@@ -98,6 +98,44 @@ const WORLD_NPCS = [
     [{ s: 'ulf', t: 'I found a shiny thing behind the barn! Then I lost it! It\'s probably still there!' }],
     [{ s: 'ulf', t: 'When I grow up I want to be a quartermaster. Or a goat.' }],
   ] },
+  // Shieldmaidens (user's art: source_art/Character/Viking_women.jpg). They stand around the world and always
+  // greet Eric as he passes (barks: a speech bubble, no dialog box); E opens a short flirty chat.
+  { id: 'maiden1', name: 'Astrid', x: 1460, y: 2390, wander: 0, maiden: true, barks: [
+    "Well, well. Eric Da Red. Is that beard regulation, or just showing off?",
+    "Hi, Eric! Walk slower. I'm admiring the axes.",
+    "Oh, it's the handsome quartermaster. Dispatch yourself over here sometime.",
+    "Careful, Red. Keep strolling like that and I'll need a herring to calm down.",
+  ], talk: [
+    [{ s: 'maiden1', t: "Eric! Finally. I've been 'guarding' this exact spot for an hour. Waiting for nobody. Definitely not you." }, { s: 'eric', m: 'smirk', t: 'I can log that as a security detail.' }, { s: 'maiden1', t: 'Log me under "priority shipment", then.' }],
+    [{ s: 'maiden1', t: 'Heard you yelled at a crate until it apologised. That is SO attractive.' }, { s: 'eric', m: 'calm', t: 'It had it coming. It was mislabelled.' }],
+  ] },
+  { id: 'maiden2', name: 'Sigrid', x: 1760, y: 1630, wander: 0, maiden: true, barks: [
+    "Eric! Save me a seat at the Drunken Goat. Right next to yours.",
+    "Hello, handsome. Your manifest isn't the only thing that's well organized.",
+    "There goes Eric. Somebody fetch me a shield, my heart needs one.",
+    "Hi Eric~ The winged helmet is new. Thanks for noticing. You didn't, but thanks.",
+  ], talk: [
+    [{ s: 'maiden2', t: 'Eric Da Red. I keep hearing your name in the mead hall. Mostly from Darrell, mostly with the word "now".' }, { s: 'eric', m: 'smirk', t: 'He has a lot of "nows".' }, { s: 'maiden2', t: "Well, if you ever have a free moment... I'd make it happen. No 'huh?' required." }],
+    [{ s: 'maiden2', t: 'Shield, sword, helmet with wings. And still, you are the most dangerous thing on this road.' }, { s: 'eric', m: 'calm', t: "...I'm going to go count some barrels." }],
+  ] },
+  { id: 'maiden3', name: 'Freydis', x: 3430, y: 1830, wander: 0, maiden: true, barks: [
+    "Oh look, it's Eric. Fought anything interesting today, or just paperwork?",
+    "Hey, Red! Two axes, one Freydis. I'd still let you win.",
+    "Hi Eric. That glare you do at invoices? Do it at me sometime.",
+    "Mmm. Smells like pine, mead and a man who closed his SQIs.",
+  ], talk: [
+    [{ s: 'maiden3', t: "I painted my face for battle. Then you walked by and now I've forgotten which battle." }, { s: 'eric', m: 'smirk', t: 'The smugglers are that way.' }, { s: 'maiden3', t: "Ugh. Practical AND bearded. Unfair." }],
+    [{ s: 'maiden3', t: 'If you ever need someone to hold your axes while you shout at a kraken... I volunteer.' }],
+  ] },
+  { id: 'maiden4', name: 'Runa', x: 3660, y: 1190, wander: 0, maiden: true, barks: [
+    "Hi Eric! I never miss a target. Just so you know.",
+    "Eric! You're blushing. Or is that just the beard?",
+    "There's my favourite quartermaster. Don't tell the others. Fine, tell them.",
+    "Hello, Red. Want an escort through the woods? I'm very good with my bow.",
+  ], talk: [
+    [{ s: 'maiden4', t: 'I could hit an apple off your head from a hundred paces.' }, { s: 'eric', m: 'shout', t: 'THE APPLES ARE MINE.' }, { s: 'maiden4', t: 'Ha! Fine. Keep your apples. I was aiming for your heart anyway.' }],
+    [{ s: 'maiden4', t: 'Quiet out here. Just birds, smugglers, and me waiting to say hi to Eric.' }, { s: 'eric', m: 'calm', t: 'Hi, Runa.' }, { s: 'maiden4', t: 'Worth the wait.' }],
+  ] },
 ];
 
 // Roaming enemies: optional fights for XP & loot. area = wander circle. need = node that must be unlocked first.
@@ -143,6 +181,14 @@ Object.assign(SPEAKERS, {
   thomas: { name: 'Thomas, VP of Operations', side: 'right', portrait: 'p_thomas' },
   nichole: { name: 'Nichole, Office Manager', side: 'right', portrait: 'p_nichole' },
 });
+for (const n of ['maiden1', 'maiden2', 'maiden3', 'maiden4', 'barmaid']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; }
+Object.assign(SPEAKERS, {
+  maiden1: { name: 'Astrid the Shieldmaiden', side: 'right', portrait: 'p_maiden1' },
+  maiden2: { name: 'Sigrid of the Winged Helm', side: 'right', portrait: 'p_maiden2' },
+  maiden3: { name: 'Freydis Two-Axes', side: 'right', portrait: 'p_maiden3' },
+  maiden4: { name: 'Runa the Archer', side: 'right', portrait: 'p_maiden4' },
+  barmaid: { name: 'Brynja the Barmaid', side: 'right', portrait: 'p_barmaid' },
+});
 for (const n of ['darrell', 'thomas', 'nichole']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; }
 IMAGES.eric_side = 'assets/sprites/eric_side.png';
 
@@ -152,3 +198,19 @@ const DRAGON_RIDGE = { x: 2420, y: 520, ix: 2380, iy: 590 };
 for (const r of ['front', 'back', 'q34', 'sven_front', 'smuggler_q34'])
   for (const k of ['body', 'armL', 'armR', 'legL', 'legR']) IMAGES[`rig_${r}_${k}`] = `assets/sprites/rig/${r}_${k}.png`;
 for (const t of ['pines', 'pine2', 'oak', 'willow', 'willow2']) IMAGES['t_' + t] = `assets/world/t_${t}.png`;
+// props with their diorama grass island dissolved (tools/rig/blend_bases.py): preferred over w_* when present
+for (const p of ['barn', 'cottage', 'stilt_house', 'workshop', 'fish_shed', 'well', 'hearth', 'crates', 'crate_barrel', 'handcart',
+  'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2']) IMAGES['b_' + p] = `assets/world/b_${p}.png`;
+
+// Brynja the barmaid (Drunken Goat + the finale tavern): greets Eric whenever he's in a tavern.
+const BRYNJA_HI = [
+  "Eric! There's my favourite customer. Your usual seat is still warm.",
+  "Well hello, Red. I saved the good mead for you. Don't tell Thomas.",
+  "Look who walked in! Handsome, bearded and exhausted. My type.",
+  "Eric! Sit, sit. Whatever Darrell gave you today, the first horn's on me.",
+];
+const BRYNJA_TALK = [
+  [{ s: 'barmaid', t: "Long day, sweetheart? You've got 'dispatcher' written all over that frown." }, { s: 'eric', m: 'calm', t: 'Darrell sent me after a dragon. Over a survey.' }, { s: 'barmaid', t: 'Then you deserve a horn of mead and a girl who doesn\'t send you anywhere. Here.' }],
+  [{ s: 'barmaid', t: "I keep a tally of everyone who makes me smile in this hall. You're the whole list, Eric." }, { s: 'eric', m: 'smirk', t: 'And Thomas?' }, { s: 'barmaid', t: "Thomas makes me check the till twice. Huh?" }],
+  [{ s: 'barmaid', t: 'Careful with the tray, I just had these mugs polished. Unlike that beard. Which is perfect.' }, { s: 'eric', m: 'smirk', t: "It's regulation length." }, { s: 'barmaid', t: 'Mm-hmm. I checked.' }],
+];

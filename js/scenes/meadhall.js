@@ -74,9 +74,11 @@ class MeadHallScene {
     this.ppl = [
       { id: 'nichole', name: 'Nichole', role: 'Office Manager', x: 640, h: 455 },
       { id: 'darrell', name: 'Darrell', role: 'The Boss', x: 1080, h: 470 },
-      { id: 'thomas', name: 'Thomas', role: 'VP of Operations', x: 1520, h: 490 },
+      { id: 'thomas', name: 'Thomas', role: 'VP of Operations', x: 1480, h: 490 },
+      { id: 'barmaid', name: 'Brynja', role: 'Barmaid', x: 1730, h: 430, bar: true },
     ];
-    this.healed = false; this.focus = null;
+    this.healed = false; this.focus = null; this.bubble = null; this.poured = false;
+    wait(Game.save.q && Game.save.q.seenCrew ? 0.9 : 12).then(() => this.say(pick(BRYNJA_HI)));
     Game.save.q = Game.save.q || { d: 0, given: false, t: false, n: 0, nGift: false };
     AudioSys.playMusic('tavern');
     // first visit: Darrell & Thomas holding court (assets/video/cut_crew.mp4)
@@ -112,6 +114,7 @@ class MeadHallScene {
     try {
       if (p.id === 'nichole') await this.talkNichole();
       else if (p.id === 'darrell') await this.talkDarrell();
+      else if (p.id === 'barmaid') await this.talkBarmaid();
       else await this.talkThomas();
       Game.persist();
     } finally { Game.busy = false; }
@@ -135,6 +138,16 @@ class MeadHallScene {
     if (!q.nGift) { q.nGift = true; got.push(...Game.give({ herring: 1, tea: 1, ink: 1 })); }
     if (Game.save.revealCaches && !q.revealNote) { q.revealNote = true; got.push({ text: 'Hidden caches marked on your map', color: '#ffd76a' }); }
     if (got.length) { AudioSys.sting('rest'); await Notice.show('Nichole Helped Out', got); }
+  }
+  say(text) { if (G.scene === this) { this.bubble = { text, t: 4.5 }; AudioSys.sfx('blip', { x: 1790 }); } }
+  async talkBarmaid() {
+    const lines = pick(BRYNJA_TALK);
+    await Dialog.play(lines);
+    if (!this.poured) {
+      this.poured = true;
+      AudioSys.sting('treasure');
+      await Notice.show('Brynja Poured One', Game.give({ mead: 1 }));
+    }
   }
   async talkDarrell() {
     const q = this.q(), o = this.order();
@@ -175,6 +188,7 @@ class MeadHallScene {
 
   update(dt) {
     this.t += dt;
+    if (this.bubble && (this.bubble.t -= dt) <= 0) this.bubble = null;
     if (Math.random() < dt * 8) Particles.ambient('glow', { x: 860, y: 640, w: 200, h: 40 }, { vy: rand(-90, -40), color: 'rgba(255,160,60,0.9)', size: 3, sizeMin: 1, life: rand(1.5, 3), layer: 'back' });
     const e = this.e;
     e.moving = false;
@@ -193,7 +207,7 @@ class MeadHallScene {
     }
     if (vx) {
       e.x = clamp(e.x + vx * 460 * dt, 110, W - 110); e.moving = true; e.flip = vx < 0;
-      e.phase += dt * 10;
+      e.phase += dt * 5.7;
       if (Math.floor(e.phase / Math.PI) !== e.step) { e.step = Math.floor(e.phase / Math.PI); AudioSys.sfx('step', { x: e.x }); }
     }
     // nearest person / door
@@ -235,12 +249,20 @@ class MeadHallScene {
       txt(c, "DARRELL'S ORDER", W - 570, 72, { size: 22, fam: F.head, weight: 900, color: C.gold, letter: 2 });
       txt(c, `${o.title}  ${Math.min(h, n)}/${n}`, W - 570, 112, { size: 28, fam: F.head, weight: 700, color: h >= n ? '#9cf08a' : '#fff' });
     }
+    if (!G.overlay) this.drawBubble(c);
     if (!Game.busy && !G.overlay) this.drawPrompt(c);
     Particles.draw(c, 'front');
     txt(c, 'A / D or click to walk  ·  E talk  ·  Esc leave', W / 2, H - 26, { size: 22, align: 'center', color: 'rgba(255,240,210,0.6)' });
   }
   drawPerson(c, p) {
     const img = G.img['npc_' + p.id]; if (!img) return;
+    if (p.bar) {
+      const s = p.h / img.height, w = img.width * s, sway = Math.sin(this.t * 1.3) * 4, base = this.floor - 150;
+      c.save(); c.translate(p.x + sway, base); c.scale(this.e.x < p.x ? -1 : 1, 1 + Math.sin(this.t * 2 + 1) * 0.006);
+      c.drawImage(img, -w / 2, -p.h, w, p.h); c.globalAlpha = 0.13; c.drawImage(tinted(img, '#ff9a40'), -w / 2, -p.h, w, p.h); c.restore();
+      this.drawBar(c, p.x);
+      return;
+    }
     const s = p.h / img.height, w = img.width * s, breathe = 1 + Math.sin(this.t * 2 + p.x) * 0.006;
     c.save(); c.globalAlpha = 0.5; c.fillStyle = '#000'; c.beginPath(); c.ellipse(p.x, this.floor, w * 0.42, 22, 0, 0, TAU); c.fill(); c.restore();
     c.save(); c.translate(p.x, this.floor); c.scale(this.e.x < p.x ? -1 : 1, breathe);
@@ -257,13 +279,57 @@ class MeadHallScene {
     }
   }
   drawEric(c) {
-    const e = this.e, img = e.moving || e.dir === 'side' ? G.img.eric_side : G.img.eric_front; if (!img) return;
-    const h = 510, s = h / img.height, w = img.width * s, fy = this.floor + 55;   // Eric walks a lane in front of the crew
-    const bob = e.moving ? Math.abs(Math.sin(e.phase)) * 9 : 0;
+    const e = this.e, h = 510, fy = this.floor + 55;   // Eric walks a lane in front of the crew
+    const WS = typeof WALK_SHEETS !== 'undefined' ? WALK_SHEETS : null, sheet = G.img.walk_eric_hall;
     c.save(); c.globalAlpha = 0.5; c.fillStyle = '#000'; c.beginPath(); c.ellipse(e.x, fy, 74, 21, 0, 0, TAU); c.fill(); c.restore();
-    c.save(); c.translate(e.x, fy - bob); c.rotate(e.moving ? Math.sin(e.phase) * 0.03 : 0); c.scale(e.flip ? -1 : 1, 1);
-    c.drawImage(img, -w / 2, -h, w, h);
+    if (WS && sheet && (e.moving || e.dir === 'side')) {
+      // filmed eye-level walk (tools/walk/extract_walk.py); frame 9 has the feet together for standing
+      const n = WS.frames.eric_hall, i = e.moving ? Math.floor(((e.phase / TAU) % 1) * n) % n : 9;
+      const sx = (i % WS.cols) * WS.fw, sy = Math.floor(i / WS.cols) * WS.fh, sc = h / WS.body;
+      c.save(); c.translate(e.x, fy); c.scale(sc * (e.flip ? -1 : 1), sc * (e.moving ? 1 : 1 + Math.sin(this.t * 2.2) * 0.006));
+      c.filter = 'sepia(0.32) saturate(1.25) brightness(0.86) contrast(1.08)';   // match the hall's warm firelight
+      c.drawImage(sheet, sx, sy, WS.fw, WS.fh, -WS.fw / 2, -WS.ay, WS.fw, WS.fh);
+      c.filter = 'none';
+      c.globalAlpha = 0.16; c.drawImage(tinted(sheet, '#ff9a40'), sx, sy, WS.fw, WS.fh, -WS.fw / 2, -WS.ay, WS.fw, WS.fh);
+      c.restore();
+      return;
+    }
+    const img = G.img.eric_front; if (!img) return;
+    const s = h / img.height, w = img.width * s;
+    c.save(); c.translate(e.x, fy); c.drawImage(img, -w / 2, -h, w, h);
     c.globalAlpha = 0.13; c.drawImage(tinted(img, '#ff9a40'), -w / 2, -h, w, h);
+    c.restore();
+  }
+  // the bar counter Brynja stands behind (drawn over her, so her cropped legs never show)
+  drawBar(c, x) {
+    const top = this.floor - 235, w = 420, x0 = x - w / 2;
+    c.save();
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.beginPath(); c.ellipse(x, this.floor + 6, w * 0.55, 26, 0, 0, TAU); c.fill();
+    const g = c.createLinearGradient(0, top, 0, this.floor); g.addColorStop(0, '#6b4424'); g.addColorStop(1, '#2e1b0d');
+    c.fillStyle = g; c.fillRect(x0, top + 22, w, this.floor - top - 22);
+    c.strokeStyle = 'rgba(20,10,4,0.55)'; c.lineWidth = 3;
+    for (let px = x0 + 52; px < x0 + w; px += 52) { c.beginPath(); c.moveTo(px, top + 26); c.lineTo(px, this.floor); c.stroke(); }
+    c.fillStyle = '#8a5a2e'; rr(c, x0 - 18, top, w + 36, 28, 6); c.fill();
+    c.fillStyle = 'rgba(255,210,150,0.25)'; c.fillRect(x0 - 12, top + 3, w + 24, 5);
+    for (const [mx, sc] of [[x0 + 60, 1], [x0 + 330, 0.9]]) {   // a couple of mugs on the counter
+      c.fillStyle = '#5a3a1c'; rr(c, mx, top - 46 * sc, 34 * sc, 46 * sc, 4); c.fill();
+      c.fillStyle = '#f2e6c8'; c.beginPath(); c.ellipse(mx + 17 * sc, top - 46 * sc, 19 * sc, 8 * sc, 0, 0, TAU); c.fill();
+      c.strokeStyle = '#5a3a1c'; c.lineWidth = 5 * sc; c.beginPath(); c.arc(mx + 38 * sc, top - 24 * sc, 10 * sc, -1.2, 1.2); c.stroke();
+    }
+    c.restore();
+  }
+  drawBubble(c) {
+    const b = this.bubble; if (!b) return;
+    const p = this.ppl.find(q => q.id === 'barmaid'), a = clamp(Math.min(b.t, 4.5 - b.t) * 4, 0, 1);
+    c.save(); c.globalAlpha = a; c.font = font(25, F.body, 600);
+    const words = b.text.split(' '), lines = []; let cur = '';
+    for (const w of words) { const t = cur ? cur + ' ' + w : w; if (c.measureText(t).width > 380 && cur) { lines.push(cur); cur = w; } else cur = t; }
+    lines.push(cur);
+    const bw = Math.max(...lines.map(l => c.measureText(l).width)) + 40, bh = lines.length * 31 + 24;
+    const bx = clamp(p.x - bw / 2, 20, W - bw - 20), by = this.floor - p.h - 120 - bh;
+    rr(c, bx, by, bw, bh, 16); c.fillStyle = 'rgba(255,248,236,0.97)'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#b44a5a'; c.stroke();
+    c.beginPath(); c.moveTo(p.x - 14, by + bh - 1); c.lineTo(p.x - 4, by + bh + 20); c.lineTo(p.x + 12, by + bh - 1); c.closePath(); c.fillStyle = 'rgba(255,248,236,0.97)'; c.fill();
+    lines.forEach((l, i) => txt(c, l, bx + bw / 2, by + 27 + i * 31, { size: 25, fam: F.body, weight: 600, align: 'center', base: 'middle', color: '#3a1a14' }));
     c.restore();
   }
   drawPrompt(c) {

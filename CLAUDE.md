@@ -31,10 +31,20 @@ fallback) → ledger roll / THE END.
   Props come from `assets/world/` (map props with the diorama soil base stripped). The east tree-line has a gate that opens when the
   Forest Road is unlocked, and the river is crossed by the bridge once it's cleared. Also: villagers (`WORLD_NPCS`, recolored placeholders
   until real art arrives; `npc_<id>` images override them), roaming skirmishes (`SKIRMISHES`, `sk_*` encounters), hidden `CACHES`.
-- Overworld look (v3.1): Eric and the villagers walk with a paper-doll rig. `tools/rig/rig_eric.py` cuts the front/back/3-4 sprites into
-  body/arms/legs (`assets/sprites/rig/`; pivots in `RIG` in world.js). Arms swing about the shoulders, boots step, and the body bobs/leans.
-  Trees use tile-free `t_*` sprites (`tools/rig/untile_trees.py`). Everything casts a skewed silhouette shadow (light from upper left).
-  Grass tufts and reeds are procedural decals, the camera is zoomed (`ZOOM`), and tall things go see-through when they cover Eric.
+- Overworld look (v3.2): Eric walks with FILMED cycles cut from the user's green-screen Flow clips (`tools/walk/extract_walk.py` →
+  `assets/sprites/walk/*.webp` sheets + `js/walk_data.js`): `eric_down`/`eric_side` (mirrored for left)/`eric_up` (one step + mirror;
+  the clip has no clean walk-away) and `eric_hall` (eye-level side walk used in the mead hall; dull-green backdrop → `SMOOTH_KEY`).
+  Cycle playback is tied to ground speed (one cycle per ~body-height stride); movement eases in/out; camera leads the walk direction.
+  The old `eric_side.png` has its boots on backwards (source sheet error): don't use it. Villagers still use the paper-doll rig
+  (`tools/rig/rig_eric.py`, `RIG` in world.js). Props use `b_*` versions with the diorama grass island dissolved
+  (`tools/rig/blend_bases.py`), falling back to `w_*`. Trees use tile-free `t_*` sprites. Everything casts a skewed silhouette shadow.
+- Shieldmaidens (Astrid/Sigrid/Freydis/Runa, `maiden1..4` in `WORLD_NPCS`, art from `source_art/Character/Viking_women.jpg`) stand
+  around the world and always greet Eric with playful flirty `barks` (speech bubble, one at a time, 30 s cooldown); E = short chat.
+  Brynja the barmaid (`npc_barmaid`, cut off at the knees, so she always stands behind a counter/table) greets Eric in the mead hall
+  (`BRYNJA_HI`/`BRYNJA_TALK` in world_data.js, pours a free mead once per visit) and toasts him in the finale tavern.
+  People on busy photo backgrounds are cut with `tools/cut/isnet_cut.py` (ISNet ONNX via onnxruntime; model = rembg's
+  isnet-general-use.onnx, download it, it isn't in the repo). `rembg` itself won't import here (Windows app-control blocks skimage).
+- Cutscene sound: if the browser blocks autoplay audio, the clip plays muted with "Click for sound"; the first click unmutes (no skip).
 - Side content: `axethrow.js` (Bjarni's range, best score + prizes) and `meadhall.js` (The Drunken Goat, an interactive tavern with the
   user's real-life coworkers as characters: Darrell = Eric's boss, gives `DISPATCH` side quests; Thomas = VP of Ops, negative, ends
   lines with "huh?" and says "Make it happen"; Nichole = office manager, always helpful: heals, gifts, hints, reveals caches).
