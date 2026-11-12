@@ -4,6 +4,20 @@ Vanilla-JS canvas RPG (1920x1080 logical, DPR-scaled). No build step and no depe
 It's live on GitHub Pages: https://marklentz333.github.io/Eric_Da_Red/ (repo MarkLentz333/Eric_Da_Red, branch `main`).
 Pushing to `main` redeploys the site in about a minute.
 
+## Where things stand (resume here)
+- **Live site = original v1** (`main` @ 521f8a3). The user had v1 restored after an unrequested push. NEVER push, merge to `main`,
+  or touch GitHub/the live site without asking the user first, every time. Never put the user's real email in commits.
+- **Active work = branch `v3`** (local, ahead of `origin/v3` which is at c8ae67d). Commit locally freely, push only when asked.
+- v3.2 (b57fbd4) added: filmed walk cycles, `b_*` grounded props, decluttered town, 4 shieldmaidens with flirty barks,
+  Brynja the barmaid (mead hall + finale tavern), "Click for sound" cutscene fix, fixed backwards boots in the mead hall.
+- Known gaps / likely next asks:
+  - The walk-away (`eric_up`) cycle is weak: the clips have no clean straight walk-away. A dedicated clip would fix it.
+  - Villagers Olaf/Haldor/Bjarni/Ulf are still recolored Eric clones on the paper-doll rig (need real art).
+  - Stone-wall gate props still show some diorama base.
+  - Unused source in `NewCharactersAdded/`: `Woman_serving_ale_in_tavern_*.mp4` (Brynja clip, could become a mead-hall cutscene)
+    and walk clip `8e513d1a` (not used by `extract_walk.py`).
+- The user's bar: "the world view walking around needs much improvement, you can do much better". Keep raising overworld quality.
+
 ## Run / test
 - Local: `python tools/serve.py --no-browser` serves on http://127.0.0.1:8642 (it also rewrites `js/music_manifest.js`).
 - Debug URLs: `?battle=<enc>&level=N&mad=N`, `?map` (walkable world; add `&clear=docks,boat,...` and `&at=x,y`), `?oldmap` (v2 node map),
