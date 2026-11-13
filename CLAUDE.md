@@ -71,7 +71,7 @@ fallback) → ledger roll / THE END.
   self-contained) and `docs/TOP_PROMPTS.txt` (the current short list for the user's limited credits).
 - v3.4 view/controls (after the user's "character too big / see-through houses is clunky" feedback; references: Tyranny,
   Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people sized to the buildings' doors (`ERIC_H` 92, ERIC_R 12, WALK 290, animals x0.55, 5 strollers;
-  village props x0.9, big buildings x1.12, trees x1.1 after a "bit crowded" note; west cluster thinned: 3rd stall removed),
+  buildings stay full size (x1.25, trees x1.22): the user wants their detail visible; west cluster thinned, 3rd stall removed),
   so the whole village fits on screen. NO fading of buildings: when something stands in front of Eric, `drawOccluded` redraws
   the hidden part of him as a warm silhouette with a rim (mask = the occluding sprites). Gold ring under Eric. Click-to-move
   uses A* on a 32px grid (`navGrid`/`findPath`/`clearLine`, string-pulled) with a dotted route; hovering a person/door shows a

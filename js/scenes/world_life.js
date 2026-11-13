@@ -53,9 +53,9 @@ Object.assign(WorldScene.prototype, {
     const roadDist = (x, y) => { let best = 1e9; for (const r of this.roads) for (let i = 0; i < r.length - 1; i++) best = Math.min(best, _segDist(x, y, r[i], r[i + 1])); return best; };
     this.roadDist = roadDist;
     // bigger buildings (people are ~186 tall: a house should be well over twice that)
-    for (const sp of this.sprites) if (!sp.tree && sp.h > 220 && !sp.ground) { sp.h *= 1.12; sp.big = true; }
+    for (const sp of this.sprites) if (!sp.tree && sp.h > 220 && !sp.ground) { sp.h *= 1.25; sp.big = true; }
     for (const s of this.solids) if (s.r > 100) s.r *= 1.15;
-    for (const sp of this.sprites) if (sp.tree) sp.h *= 1.1;
+    for (const sp of this.sprites) if (sp.tree) sp.h *= 1.22;
     // houses
     for (const hs of VILLAGE.houses) {
       this.sprites.push({ kind: 'prop', img: 'w_longhouse', x: hs.x, y: hs.y, h: hs.h, big: true, flip: hs.flip, smoke: [hs.flip ? 0.43 : 0.57, 0.86] });
@@ -118,8 +118,6 @@ Object.assign(WorldScene.prototype, {
       this.sprites.push({ kind: 'prop', img: 'w_' + p, x, y, h, flip: R() < 0.5 });
       this.solids.push({ x, y: y - 8, r: h * 0.28 });
     }
-    // village buildings/props a touch smaller than drawn so the streets between them breathe (footprints follow the art)
-    for (const sp of this.sprites) if (!sp.tree && !sp.ground && sp.kind === 'prop' && !sp._vs) { sp.h *= 0.9; sp._vs = true; }
     // chimney smoke from the home cottage, the houses and the other buildings that have a chimney
     for (const sp of this.sprites) {
       if (sp.smoke) L.smoke.push({ sp, fx: sp.smoke[0], fy: sp.smoke[1], seed: R() * 99 });
