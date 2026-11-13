@@ -127,6 +127,23 @@ Object.assign(WorldScene.prototype, {
     // flower beds (ground)
     L.beds = [];
     for (const hs of VILLAGE.houses) for (let k = 0; k < 2; k++) L.beds.push({ x: hs.x + (k ? 1 : -1) * hs.h * 0.42 + (R() - 0.5) * 30, y: hs.y + 18 + R() * 20, n: 14 + Math.floor(R() * 8), seed: R() * 999 });
+    // ------------------------------------------------------------ townsfolk
+    // Each walker follows one road polyline back and forth (keeping to one side), pausing now and then.
+    // Looks: the two filmed villagers, varied a little by size and a gentle colour shift.
+    L.walkers = [];
+    const looks = [['villager_man', 'none', 1.0], ['villager_woman', 'none', 0.95], ['villager_man', 'brightness(0.88) contrast(1.06)', 1.04],
+      ['villager_woman', 'sepia(0.25) brightness(0.96)', 0.93], ['villager_man', 'sepia(0.35) brightness(0.92)', 0.97], ['villager_woman', 'saturate(0.8) brightness(1.05)', 0.97],
+      ['villager_man', 'saturate(1.15) brightness(1.04)', 1.02], ['villager_woman', 'brightness(0.9) contrast(1.05)', 0.95]];   // no hue shifts: they tint skin too
+    const routes = [0, 3, 2, 4, 0, 3, 1, 2];
+    looks.forEach(([sheet, filter, sc], k) => {
+      const r = this.roads[routes[k] % this.roads.length];
+      // only the stretch of that road inside town
+      const pts = r.filter(([x, y]) => Math.hypot(x - TOWN.x, y - TOWN.y) < TOWN.r + 120);
+      if (pts.length < 4) return;
+      const i = Math.floor(R() * (pts.length - 1));
+      L.walkers.push({ sheet, filter, sc, pts, i, f: R(), dir: R() < 0.5 ? 1 : -1, side: (R() < 0.5 ? -1 : 1) * (18 + R() * 16), x: pts[i][0], y: pts[i][1],
+        anim: R(), wait: R() * 3, face: 1, moving: false, seed: R() * 99 });
+    });
     // ------------------------------------------------------------ animals
     const A = (type, x, y, area, o = {}) => L.animals.push(Object.assign({ type, x, y, hx: x, hy: y, area, tx: x, ty: y, wait: R() * 3, t: R() * 9, face: R() < 0.5 ? -1 : 1, moving: false, seed: R() * 99, col: 0 }, o));
     const flock = (type, cx, cy, n, area, o) => { for (let i = 0; i < n; i++) A(type, cx + (R() - 0.5) * area, cy + (R() - 0.5) * area * 0.6, area, Object.assign({ col: Math.floor(R() * 3) }, o)); };
@@ -271,6 +288,21 @@ Object.assign(WorldScene.prototype, {
         else { a.tx = a.x; a.ty = a.y; }
       }
     }
+    for (const w of L.walkers || []) {
+      w.moving = false;
+      if (w.wait > 0) { w.wait -= dt; continue; }
+      const a = w.pts[w.i], b = w.pts[w.i + w.dir];
+      if (!b) { w.dir = -w.dir; w.wait = 1 + Math.random() * 4; continue; }
+      const sx = b[0] - a[0], sy = b[1] - a[1], len = Math.hypot(sx, sy) || 1, sp = 62 * w.sc;
+      w.f += sp * dt / len;
+      if (w.f >= 1) { w.f = 0; w.i += w.dir; if (Math.random() < 0.02) w.wait = 1.5 + Math.random() * 3; continue; }
+      const nx = -sy / len, ny = sx / len, side = w.side * w.dir;
+      const px = w.x, py = w.y;
+      w.x = a[0] + sx * w.f + nx * side; w.y = a[1] + sy * w.f + ny * side;
+      const d = Math.hypot(w.x - px, w.y - py);
+      if (Math.abs(w.x - px) > 0.01) w.face = w.x > px ? 1 : -1;
+      w.anim += d / (ERIC_H * w.sc * 1.05); w.moving = true;
+    }
     for (const g of L.gulls) g.a += g.v * dt;
     for (const b of L.butter) { b.a += (Math.sin(this.t * 0.7 + b.seed) * 1.6) * dt; b.x += Math.cos(b.a) * 40 * dt; b.y += Math.sin(b.a) * 22 * dt; }
     // random clucks / baas near Eric
@@ -296,6 +328,7 @@ Object.assign(WorldScene.prototype, {
       const lift = a.z || 0;
       c.fillStyle = `rgba(0,0,0,${0.3 * Math.max(0.2, 1 - lift / 160)})`; c.beginPath(); c.ellipse(a.x + lift * 0.4, a.y, sz, sz * 0.36, 0, 0, TAU); c.fill();
     }
+    for (const w of L.walkers || []) { if (w.x < v.x - 60 || w.x > v.x + v.w + 60 || w.y < v.y - 60 || w.y > v.y + v.h + 60) continue; c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); c.ellipse(w.x + 6, w.y, 26 * w.sc, 9 * w.sc, 0, 0, TAU); c.fill(); }
     for (const g of L.gulls) { const x = g.cx + Math.cos(g.a) * g.r, y = g.cy + Math.sin(g.a) * g.r * 0.6; c.fillStyle = 'rgba(0,0,0,0.14)'; c.beginPath(); c.ellipse(x + g.z * 0.5, y, 14, 5, 0, 0, TAU); c.fill(); }
     // lantern pools of light
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -305,6 +338,7 @@ Object.assign(WorldScene.prototype, {
   addLife(c, add) {
     const L = this.life; if (!L) return;
     for (const a of L.animals) add(a.x, a.y, () => this.drawAnimal(c, a));
+    for (const w of L.walkers || []) add(w.x, w.y, () => this.drawWalker(c, w));
     for (const l of L.lamps) add(l.x, l.y, () => this.drawLamp(c, l));
     for (const [x, y] of VILLAGE.hay) add(x, y, () => this.drawHay(c, x, y));
     // fences / walls / bunting are drawn straight in screen space (they run across depth)
@@ -348,6 +382,21 @@ Object.assign(WorldScene.prototype, {
   },
 
   // ------------------------------------------------------------------ kit pieces (billboards, local world coords)
+  // a townsperson from a filmed side-view walk sheet (mirrored when walking left)
+  drawWalker(c, w) {
+    const WS = typeof WALK_SHEETS !== 'undefined' ? WALK_SHEETS : null, sheet = G.img['walk_' + w.sheet]; if (!WS || !sheet) return;
+    const n = WS.frames[w.sheet], i = w.moving ? Math.floor((((w.anim % 1) + 1) % 1) * n) % n : (WS.stand ? WS.stand[w.sheet] : 0);
+    let img = sheet;
+    if (w.filter !== 'none') {   // tinted copy, made once per look
+      const key = w.sheet + '|' + w.filter; this._tint = this._tint || {};
+      if (!this._tint[key]) { const [cv, cx] = _mkCv(sheet.width, sheet.height); cx.filter = w.filter; cx.drawImage(sheet, 0, 0); this._tint[key] = cv; }
+      img = this._tint[key];
+    }
+    const s = ERIC_H * w.sc / WS.body, br = w.moving ? 1 : 1 + Math.sin(this.t * 2 + w.seed) * 0.007;
+    c.save(); c.translate(w.x, w.y); c.scale(s * w.face, s * br);
+    c.drawImage(img, (i % WS.cols) * WS.fw, Math.floor(i / WS.cols) * WS.fh, WS.fw, WS.fh, -WS.fw / 2, -WS.ay, WS.fw, WS.fh);
+    c.restore();
+  },
   drawLamp(c, l) {
     const x = l.x, y = l.y, f = 0.85 + Math.sin(this.t * 11 + l.seed) * 0.06 + Math.sin(this.t * 23 + l.seed * 2) * 0.04;
     const wood = c.createLinearGradient(x - 5, 0, x + 5, 0); wood.addColorStop(0, '#2c1a0c'); wood.addColorStop(0.5, '#6e4826'); wood.addColorStop(1, '#2a180a');

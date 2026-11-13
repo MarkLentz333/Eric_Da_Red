@@ -4,23 +4,25 @@ Vanilla-JS canvas RPG (1920x1080 logical, DPR-scaled). No build step and no depe
 It's live on GitHub Pages: https://marklentz333.github.io/Eric_Da_Red/ (repo MarkLentz333/Eric_Da_Red, branch `main`).
 Pushing to `main` redeploys the site in about a minute.
 
-## Where things stand (resume here)
+## Where things stand (resume here) — last updated 2026-11-12
 - **Live site = original v1** (`main` @ 521f8a3). The user had v1 restored after an unrequested push. NEVER push, merge to `main`,
   or touch GitHub/the live site without asking the user first, every time. Never put the user's real email in commits.
-- **Active work = branch `v3`** (local, ahead of `origin/v3` which is at c8ae67d). Commit locally freely, push only when asked.
-- v3.3 (this round): perspective camera, dense village with the user's new building art, animals, mead hall background.
-  All villagers (Olaf, Bjarni, Haldor, Ulf, Gunnhild) now use the user's turnaround art (3/4 view → npc_<id>, front head →
-  p_<id> portrait). New buildings: axe_range (replaces the drawn target), dispatch_office (Gunnhild's harbor office),
-  jarls_hall (landmark NE of town) — `VILLAGE.landmarks`. Still missing: townsfolk/animal walk clips (prompts 1a-1j).
-- v3.2 (b57fbd4) added: filmed walk cycles, `b_*` grounded props, decluttered town, 4 shieldmaidens with flirty barks,
-  Brynja the barmaid (mead hall + finale tavern), "Click for sound" cutscene fix, fixed backwards boots in the mead hall.
-- Known gaps / likely next asks:
-  - The walk-away (`eric_up`) cycle is weak: the clips have no clean straight walk-away. A dedicated clip would fix it.
-  - Villagers Olaf/Haldor/Bjarni/Ulf are still recolored Eric clones on the paper-doll rig (need real art).
-  - Stone-wall gate props still show some diorama base.
-  - Unused source in `NewCharactersAdded/`: `Woman_serving_ale_in_tavern_*.mp4` (Brynja clip, could become a mead-hall cutscene)
-    and walk clip `8e513d1a` (not used by `extract_walk.py`).
-- The user's bar: "the world view walking around needs much improvement, you can do much better". Keep raising overworld quality.
+- **Active work = branch `v3`**, committed locally only (origin/v3 is still at c8ae67d). Commit locally freely, push only when asked.
+- Latest rounds: v3.2 filmed walk cycles, shieldmaidens, Brynja; v3.3 perspective camera + full village with the user's building
+  art, real art for every villager, animals, walking townsfolk (filmed), mead hall background. See the overworld bullets below.
+- The user's image/video credits reset on **2026-11-19**. Wishlist: `docs/ASSET_PROMPTS.txt` (every prompt self-contained,
+  copy between >>> and <<<); `docs/TOP_PROMPTS.txt` = the current short list. New files arrive in
+  `C:/Users/ronin/Downloads/New Assets/` (named like `3h  longhouse_small.png.jpg`); copy into source_art/ before cutting.
+- Done from the wishlist: 1a/1b (villager walk clips), 2a-2e (villagers), 3a-3e, 3g, 3h, 5d. Still open: 1c-1k walk clips
+  (old man, kid, chicken, sheep, goat, dog, pig, horse, Eric walking away), 2f jarl, 3f signpost, 4x portraits, 5a-5c bgs,
+  6x cutscenes, 7x music. Best next: 1h dog + 1e chicken + 1f sheep clips (would replace the procedural animals), 1k Eric away.
+- Known rough spots: procedural animals are cartoonier than the art; the diorama grass tiles under buildings show faint edges;
+  townsfolk use only side-view sheets (they slide a bit when walking straight up/down a road); headless perf ~7-9 ms/frame.
+- Pipelines: buildings `tools/cut/diorama_cut.py <img> <name> 620` → add to NAMES in `tools/rig/blend_bases.py` → register
+  `w_`/`b_` in world_data.js → place in `VILLAGE` (world_life.js). Characters: `tools/cut/isnet_cut.py` on the 3/4 view of a
+  turnaround sheet (model = scratchpad isnet.onnx; re-download rembg's isnet-general-use.onnx if gone), trim, 820 px tall →
+  `assets/sprites/npc_<id>.png`; front-view head 4:5 → `assets/portraits/<id>.jpg`. Walk clips: add a `CYCLES` entry in
+  `tools/walk/extract_walk.py` (find the loop by matching leg silhouettes; avoid frames where they turn their head).
 
 ## Run / test
 - Local: `python tools/serve.py --no-browser` serves on http://127.0.0.1:8642 (it also rewrites `js/music_manifest.js`).
