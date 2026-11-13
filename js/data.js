@@ -16,6 +16,7 @@ const IMAGES = {
   eric_armR: 'assets/sprites/eric_armR.png',
   wolf_tag: 'assets/ui/wolf_tag.png',
   bg_tavern: 'assets/bg/tavern.jpg',
+  bg_meadhall: 'assets/bg/meadhall.jpg',   // user's mead hall interior (Drunken Goat)
   smuggler: 'assets/sprites/smuggler.png',
   sven: 'assets/sprites/sven.png',
   en_crate: 'assets/sprites/en_crate.png',

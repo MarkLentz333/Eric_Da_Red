@@ -80,17 +80,17 @@ const WORLD_NPCS = [
     [{ s: 'gunnhild', t: 'Olaf says a crate bit him. Olaf also says the moon follows him home.' }, { s: 'eric', m: 'smirk', t: 'The crate DID bite him. I have it in writing.' }],
     [{ s: 'gunnhild', t: 'If you see Bjarni at the axe range, tell him the target is not a "mood board".' }],
   ] },
-  { id: 'olaf', name: 'Olaf', x: 1500, y: 1820, wander: 160, body: ['sven', 'sepia(0.6) saturate(1.25) brightness(1.3) contrast(0.92)'], talk: [
+  { id: 'olaf', name: 'Olaf', x: 1500, y: 1820, wander: 160, body: ['sven', 'sepia(0.45) saturate(1.1) brightness(1.18) contrast(0.95) hue-rotate(-8deg)'], talk: [
     [{ s: 'olaf', t: 'Eric! I counted the cod. Twice. Got two different numbers.' }, { s: 'eric', m: 'calm', t: 'Then count a third time and take the average.' }, { s: 'olaf', t: '...That\'s allowed?' }],
     [{ s: 'olaf', t: 'My hand still hurts from the crate. Do crates have teeth? Is that in the manifest?' }],
     [{ s: 'olaf', t: 'I heard there\'s a well in the forest that grants wishes. I wished for fewer crates.' }, { s: 'eric', m: 'shout', t: 'DON\'T WISH FOR FEWER CRATES. WE NEED FORTY.' }],
   ] },
-  { id: 'haldor', name: 'Old Haldor', x: 1320, y: 2080, wander: 60, body: ['sven', 'grayscale(0.9) brightness(1.6) contrast(0.8)'], talk: [
+  { id: 'haldor', name: 'Old Haldor', x: 1320, y: 2080, wander: 60, body: ['sven', 'sepia(0.55) saturate(0.75) brightness(1.3) contrast(0.9)'], talk: [
     [{ s: 'haldor', t: 'Sixty winters I\'ve fished this fjord. Never seen a squid with a monocle. Until Tuesday.' }],
     [{ s: 'haldor', t: 'Herring calms the blood, lad. Eat one before you go red. Or after. Or during.' }],
     [{ s: 'haldor', t: 'The big beast at the fjord mouth hates paperwork. Funny. So does everyone.' }],
   ] },
-  { id: 'bjarni', name: 'Bjarni the Axe-Master', x: 1930, y: 2200, wander: 40, body: ['smuggler', 'brightness(1.9) sepia(0.55) saturate(1.5) contrast(0.88)'], range: true, talk: [
+  { id: 'bjarni', name: 'Bjarni the Axe-Master', x: 1930, y: 2200, wander: 40, body: ['smuggler', 'brightness(1.35) sepia(0.4) saturate(1.2) contrast(0.95)'], range: true, talk: [
     [{ s: 'bjarni', t: 'Quartermaster! Fancy a throw? Five axes. Bullseye is fifty. Wind is free.' }],
   ] },
   { id: 'ulf', name: 'Little Ulf', x: 2150, y: 1720, wander: 260, fast: true, body: ['sven', 'hue-rotate(-20deg) saturate(1.5) brightness(1.35)'], scale: 0.72, talk: [
@@ -172,10 +172,10 @@ Object.assign(SPEAKERS, {
 });
 for (const p of ['stilt_house', 'cottage', 'barn', 'workshop', 'fish_shed', 'rowboat_water', 'fishing_boat', 'pier', 'well', 'willow', 'oak', 'pines',
   'fish_rack', 'crate_barrel', 'canoe_sand', 'crates', 'handcart', 'ladder_wood', 'stone_wall', 'canoe_sand2', 'bridge', 'nets', 'hearth',
-  'sampan', 'willow2', 'oak2', 'pine2', 'reeds', 'bonsai', 'grass1', 'grass2']) IMAGES['w_' + p] = `assets/world/${p}.png`;
+  'sampan', 'willow2', 'oak2', 'pine2', 'reeds', 'bonsai', 'grass1', 'grass2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith']) IMAGES['w_' + p] = `assets/world/${p}.png`;
 
 // The Drunken Goat mead hall (interactive tavern: Darrell, Thomas & Nichole)
-const MEAD_HALL = { p: 'stilt_house', x: 1960, y: 1330, h: 360, r: 120, ix: 1990, iy: 1420 };
+const MEAD_HALL = { p: 'goat_hall', x: 1960, y: 1330, h: 400, r: 120, ix: 1930, iy: 1430 };   // user's Drunken Goat diorama
 Object.assign(SPEAKERS, {
   darrell: { name: 'Darrell, The Boss', side: 'right', portrait: 'p_darrell' },
   thomas: { name: 'Thomas, VP of Operations', side: 'right', portrait: 'p_thomas' },
@@ -200,7 +200,7 @@ for (const r of ['front', 'back', 'q34', 'sven_front', 'smuggler_q34'])
 for (const t of ['pines', 'pine2', 'oak', 'willow', 'willow2']) IMAGES['t_' + t] = `assets/world/t_${t}.png`;
 // props with their diorama grass island dissolved (tools/rig/blend_bases.py): preferred over w_* when present
 for (const p of ['barn', 'cottage', 'stilt_house', 'workshop', 'fish_shed', 'well', 'hearth', 'crates', 'crate_barrel', 'handcart',
-  'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2']) IMAGES['b_' + p] = `assets/world/b_${p}.png`;
+  'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith']) IMAGES['b_' + p] = `assets/world/b_${p}.png`;
 
 // Brynja the barmaid (Drunken Goat + the finale tavern): greets Eric whenever he's in a tavern.
 const BRYNJA_HI = [

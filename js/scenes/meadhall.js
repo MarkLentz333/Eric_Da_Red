@@ -92,9 +92,9 @@ class MeadHallScene {
       ])).finally(() => { Game.busy = false; });
     }
     if (!this.bg) {
-      const bg = G.img.bg_tavern, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const bg = G.img.bg_meadhall || G.img.bg_tavern, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
       const x = cv.getContext('2d');
-      if (bg) { x.filter = 'blur(2px) brightness(0.8)'; const s = Math.max(W / bg.width, H / bg.height) * 1.08; x.drawImage(bg, (W - bg.width * s) / 2, (H - bg.height * s) / 2 - 40, bg.width * s, bg.height * s); x.filter = 'none'; }
+      if (bg) { x.filter = bg === G.img.bg_meadhall ? 'blur(1px) brightness(0.88)' : 'blur(2px) brightness(0.8)'; const s = Math.max(W / bg.width, H / bg.height) * 1.08; x.drawImage(bg, (W - bg.width * s) / 2, (H - bg.height * s) / 2 - 40, bg.width * s, bg.height * s); x.filter = 'none'; }
       this.bg = cv;
     }
   }

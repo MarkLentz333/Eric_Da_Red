@@ -8,6 +8,8 @@ Pushing to `main` redeploys the site in about a minute.
 - **Live site = original v1** (`main` @ 521f8a3). The user had v1 restored after an unrequested push. NEVER push, merge to `main`,
   or touch GitHub/the live site without asking the user first, every time. Never put the user's real email in commits.
 - **Active work = branch `v3`** (local, ahead of `origin/v3` which is at c8ae67d). Commit locally freely, push only when asked.
+- v3.3 (this round): perspective camera, dense village with the user's new building art, animals, mead hall background.
+  Still missing: real villager art (gray Eric-clone rigs), townsfolk/animal walk clips (prompts 1a-1j).
 - v3.2 (b57fbd4) added: filmed walk cycles, `b_*` grounded props, decluttered town, 4 shieldmaidens with flirty barks,
   Brynja the barmaid (mead hall + finale tavern), "Click for sound" cutscene fix, fixed backwards boots in the mead hall.
 - Known gaps / likely next asks:
@@ -52,6 +54,17 @@ fallback) → ledger roll / THE END.
   The old `eric_side.png` has its boots on backwards (source sheet error): don't use it. Villagers still use the paper-doll rig
   (`tools/rig/rig_eric.py`, `RIG` in world.js). Props use `b_*` versions with the diorama grass island dissolved
   (`tools/rig/blend_bases.py`), falling back to `w_*`. Trees use tile-free `t_*` sprites. Everything casts a skewed silhouette shadow.
+- v3.3 perspective + village (`CAM3` in world.js, `js/scenes/world_life.js`): the overworld is a tilted ground plane seen
+  through a pinhole camera. `this.cam` is the FOCUS ground point (not a corner); use `proj(x,y)` → {x,y,s} / `unproj(sx,sy)`,
+  `bb(c,x,y,fn)` draws fn in a depth-scaled billboard frame, `view` = visible ground rect. Static ground is baked into
+  512px world tiles (`paintStatic`, `paintVillage` adds cobbles/plots/pen/beds; delete `this.tiles` to rebuild), the per-frame
+  ground (water anim, shadows, dust, clouds) is composed in `groundLayer()` and projected in strips by `projectGround()`.
+  Fences/walls/bunting are drawn in screen space (`add(x,y,f,true)`). Village layout = `VILLAGE`/`TOWN` in world_life.js;
+  animals (chicken, sheep, pig, goat, dog, cat, duck, crow, gulls, butterflies) are procedural `_a_<type>` painters.
+  Buildings from the user's dioramas: `longhouse`, `goat_hall` (= the Drunken Goat, MEAD_HALL.p), `goat_inn`, `stall1/2`,
+  `blacksmith`, cut with `tools/cut/diorama_cut.py <img> <name> 620` (auto-finds the soil edge) then `blend_bases.py`.
+  Mead hall interior uses `bg_meadhall` (assets/bg/meadhall.jpg). Prompts: `docs/ASSET_PROMPTS.txt` (every prompt
+  self-contained) and `docs/TOP_PROMPTS.txt` (the current short list for the user's limited credits).
 - Shieldmaidens (Astrid/Sigrid/Freydis/Runa, `maiden1..4` in `WORLD_NPCS`, art from `source_art/Character/Viking_women.jpg`) stand
   around the world and always greet Eric with playful flirty `barks` (speech bubble, one at a time, 30 s cooldown); E = short chat.
   Brynja the barmaid (`npc_barmaid`, cut off at the knees, so she always stands behind a counter/table) greets Eric in the mead hall

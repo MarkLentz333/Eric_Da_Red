@@ -12,7 +12,7 @@ import cv2, numpy as np, os
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 W = os.path.join(ROOT, 'assets', 'world')
 NAMES = ['barn', 'cottage', 'stilt_house', 'workshop', 'fish_shed', 'well', 'hearth', 'crates', 'crate_barrel',
-         'handcart', 'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2']
+         'handcart', 'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith']
 
 
 def blend(name):
