@@ -70,7 +70,7 @@ fallback) → ledger roll / THE END.
   Mead hall interior uses `bg_meadhall` (assets/bg/meadhall.jpg). Prompts: `docs/ASSET_PROMPTS.txt` (every prompt
   self-contained) and `docs/TOP_PROMPTS.txt` (the current short list for the user's limited credits).
 - v3.4 view/controls (after the user's "character too big / see-through houses is clunky" feedback; references: Tyranny,
-  Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people smaller (`ERIC_H` 132, animals x0.74;
+  Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people sized to the buildings' doors (`ERIC_H` 92, ERIC_R 12, WALK 290, animals x0.55, 5 strollers;
   village props x0.9, big buildings x1.12, trees x1.1 after a "bit crowded" note; west cluster thinned: 3rd stall removed),
   so the whole village fits on screen. NO fading of buildings: when something stands in front of Eric, `drawOccluded` redraws
   the hidden part of him as a warm silhouette with a rim (mask = the occluding sprites). Gold ring under Eric. Click-to-move

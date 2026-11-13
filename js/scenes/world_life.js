@@ -136,7 +136,7 @@ Object.assign(WorldScene.prototype, {
       ['villager_woman', 'sepia(0.25) brightness(0.96)', 0.93], ['villager_man', 'sepia(0.35) brightness(0.92)', 0.97], ['villager_woman', 'saturate(0.8) brightness(1.05)', 0.97],
       ['villager_man', 'saturate(1.15) brightness(1.04)', 1.02], ['villager_woman', 'brightness(0.9) contrast(1.05)', 0.95]];   // no hue shifts: they tint skin too
     const routes = [0, 3, 2, 4, 0, 3, 1, 2];
-    looks.forEach(([sheet, filter, sc], k) => {
+    looks.slice(0, 5).forEach(([sheet, filter, sc], k) => {   // 5 strollers: room left for animals/extra life later
       const r = this.roads[routes[k] % this.roads.length];
       // only the stretch of that road inside town
       const pts = r.filter(([x, y]) => Math.hypot(x - TOWN.x, y - TOWN.y) < TOWN.r + 120);
@@ -327,9 +327,9 @@ Object.assign(WorldScene.prototype, {
       const sz = { chicken: 12, sheep: 34, pig: 30, goat: 28, dog: 26, cat: 0, crow: 8 }[a.type] || 10;
       if (!sz) continue;
       const lift = a.z || 0;
-      c.fillStyle = `rgba(0,0,0,${0.3 * Math.max(0.2, 1 - lift / 160)})`; c.beginPath(); c.ellipse(a.x + lift * 0.4, a.y, sz * 0.74, sz * 0.27, 0, 0, TAU); c.fill();
+      c.fillStyle = `rgba(0,0,0,${0.3 * Math.max(0.2, 1 - lift / 160)})`; c.beginPath(); c.ellipse(a.x + lift * 0.4, a.y, sz * 0.55, sz * 0.2, 0, 0, TAU); c.fill();
     }
-    for (const w of L.walkers || []) { if (w.x < v.x - 60 || w.x > v.x + v.w + 60 || w.y < v.y - 60 || w.y > v.y + v.h + 60) continue; c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); c.ellipse(w.x + 5, w.y, 23 * w.sc, 8 * w.sc, 0, 0, TAU); c.fill(); }
+    for (const w of L.walkers || []) { if (w.x < v.x - 60 || w.x > v.x + v.w + 60 || w.y < v.y - 60 || w.y > v.y + v.h + 60) continue; c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); c.ellipse(w.x + 4, w.y, 16 * w.sc, 6 * w.sc, 0, 0, TAU); c.fill(); }
     for (const g of L.gulls) { const x = g.cx + Math.cos(g.a) * g.r, y = g.cy + Math.sin(g.a) * g.r * 0.6; c.fillStyle = 'rgba(0,0,0,0.14)'; c.beginPath(); c.ellipse(x + g.z * 0.5, y, 14, 5, 0, 0, TAU); c.fill(); }
     // lantern pools of light
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -523,7 +523,7 @@ Object.assign(WorldScene.prototype, {
     const t = a.t, mv = a.moving ? 1 : 0;
     c.save(); c.translate(a.x, a.y - (a.z || 0));
     const fl = a.type === 'cat' ? (a.look || 1) : a.face;
-    c.scale(fl * 0.74, 0.74);   // animals sized to the (smaller) townsfolk
+    c.scale(fl * 0.55, 0.55);   // animals sized to the (smaller) townsfolk
     if (this['_a_' + a.type]) this['_a_' + a.type](c, a, t, mv);
     c.restore();
   },

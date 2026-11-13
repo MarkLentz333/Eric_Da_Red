@@ -5,7 +5,7 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 132, ERIC_R = 15, WALK = 330, ZOOM = 1.12;
+const ERIC_H = 92, ERIC_R = 12, WALK = 290, ZOOM = 1.12;
 // v3.3 perspective camera: the ground is a tilted plane seen through a pinhole camera (pitch = tilt from the ground,
 // F = focal length in px, zoom = scale at the focus point, h0 = screen row of the focus point). Standing things are
 // billboards scaled by depth; the ground is rendered flat into tiles and projected row by row.
@@ -876,7 +876,7 @@ class WorldScene extends MapScene {
     }
     // a soft gold ring under Eric (strategy-RPG style) so he's easy to find in a busy street
     { const e = this.e; c.save(); c.strokeStyle = 'rgba(255,214,120,0.75)'; c.lineWidth = 3.5;
-      c.beginPath(); c.ellipse(e.x, e.y + 2, 34, 15, 0, 0, TAU); c.stroke();
+      c.beginPath(); c.ellipse(e.x, e.y + 2, 25, 11, 0, 0, TAU); c.stroke();
       c.strokeStyle = 'rgba(255,214,120,0.25)'; c.lineWidth = 8; c.stroke(); c.restore(); }
     // the planned route as a faint dotted trail, and a ring under whatever the mouse is pointing at
     if (this.target && this.target.path && this.target.path.length) {
