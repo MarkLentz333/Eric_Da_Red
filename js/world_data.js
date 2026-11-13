@@ -70,12 +70,12 @@ const WORLD_PROPS = [
 ];
 
 // The Axe Range — a fun spot in town (opens the axe-throwing side game)
-const AXE_RANGE = { x: 2060, y: 2140, ix: 2000, iy: 2110 };
+const AXE_RANGE = { x: 2080, y: 2160, ix: 1990, iy: 2225 };
 
 // Villagers you can walk up to and talk to.  body: base sprite + canvas filter (placeholder until real art arrives).
 // talk: list of line-sets; Eric cycles through them.  stage(n) picks lines based on story progress.
 const WORLD_NPCS = [
-  { id: 'gunnhild', name: 'Gunnhild', x: 860, y: 1540, wander: 0, body: null, office: true, talk: [
+  { id: 'gunnhild', name: 'Gunnhild', x: 1000, y: 1585, wander: 0, body: null, talk: [
     [{ s: 'gunnhild', t: 'Harbor office is open. Complaints go in the barrel. The barrel is also full of complaints.' }],
     [{ s: 'gunnhild', t: 'Olaf says a crate bit him. Olaf also says the moon follows him home.' }, { s: 'eric', m: 'smirk', t: 'The crate DID bite him. I have it in writing.' }],
     [{ s: 'gunnhild', t: 'If you see Bjarni at the axe range, tell him the target is not a "mood board".' }],
@@ -172,7 +172,7 @@ Object.assign(SPEAKERS, {
 });
 for (const p of ['stilt_house', 'cottage', 'barn', 'workshop', 'fish_shed', 'rowboat_water', 'fishing_boat', 'pier', 'well', 'willow', 'oak', 'pines',
   'fish_rack', 'crate_barrel', 'canoe_sand', 'crates', 'handcart', 'ladder_wood', 'stone_wall', 'canoe_sand2', 'bridge', 'nets', 'hearth',
-  'sampan', 'willow2', 'oak2', 'pine2', 'reeds', 'bonsai', 'grass1', 'grass2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith']) IMAGES['w_' + p] = `assets/world/${p}.png`;
+  'sampan', 'willow2', 'oak2', 'pine2', 'reeds', 'bonsai', 'grass1', 'grass2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith', 'jarls_hall', 'dispatch_office', 'axe_range']) IMAGES['w_' + p] = `assets/world/${p}.png`;
 
 // The Drunken Goat mead hall (interactive tavern: Darrell, Thomas & Nichole)
 const MEAD_HALL = { p: 'goat_hall', x: 1960, y: 1330, h: 400, r: 120, ix: 1930, iy: 1430 };   // user's Drunken Goat diorama
@@ -200,7 +200,7 @@ for (const r of ['front', 'back', 'q34', 'sven_front', 'smuggler_q34'])
 for (const t of ['pines', 'pine2', 'oak', 'willow', 'willow2']) IMAGES['t_' + t] = `assets/world/t_${t}.png`;
 // props with their diorama grass island dissolved (tools/rig/blend_bases.py): preferred over w_* when present
 for (const p of ['barn', 'cottage', 'stilt_house', 'workshop', 'fish_shed', 'well', 'hearth', 'crates', 'crate_barrel', 'handcart',
-  'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith']) IMAGES['b_' + p] = `assets/world/b_${p}.png`;
+  'fish_rack', 'nets', 'ladder_wood', 'stone_wall', 'canoe_sand', 'canoe_sand2', 'bonsai', 'shrub', 'oak2', 'longhouse', 'goat_hall', 'goat_inn', 'stall1', 'stall2', 'blacksmith', 'jarls_hall', 'dispatch_office', 'axe_range']) IMAGES['b_' + p] = `assets/world/b_${p}.png`;
 
 // Brynja the barmaid (Drunken Goat + the finale tavern): greets Eric whenever he's in a tavern.
 const BRYNJA_HI = [
@@ -217,4 +217,4 @@ const BRYNJA_TALK = [
 
 // Real villager art from the user's turnaround sheets (source_art/Character/<id>.jpg, 3/4 view cut with isnet_cut.py).
 // npc_<id> overrides the recolored rig placeholder automatically.
-for (const n of ['olaf', 'bjarni']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; SPEAKERS[n].portrait = 'p_' + n; }
+for (const n of ['olaf', 'bjarni', 'haldor', 'ulf', 'gunnhild']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; SPEAKERS[n].portrait = 'p_' + n; }

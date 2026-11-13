@@ -9,8 +9,9 @@ Pushing to `main` redeploys the site in about a minute.
   or touch GitHub/the live site without asking the user first, every time. Never put the user's real email in commits.
 - **Active work = branch `v3`** (local, ahead of `origin/v3` which is at c8ae67d). Commit locally freely, push only when asked.
 - v3.3 (this round): perspective camera, dense village with the user's new building art, animals, mead hall background.
-  Olaf + Bjarni now use the user's turnaround art (npc_/p_ olaf, bjarni). Still missing: Haldor, Ulf, Gunnhild art
-  (gray rig clones), townsfolk/animal walk clips (prompts 1a-1j).
+  All villagers (Olaf, Bjarni, Haldor, Ulf, Gunnhild) now use the user's turnaround art (3/4 view → npc_<id>, front head →
+  p_<id> portrait). New buildings: axe_range (replaces the drawn target), dispatch_office (Gunnhild's harbor office),
+  jarls_hall (landmark NE of town) — `VILLAGE.landmarks`. Still missing: townsfolk/animal walk clips (prompts 1a-1j).
 - v3.2 (b57fbd4) added: filmed walk cycles, `b_*` grounded props, decluttered town, 4 shieldmaidens with flirty barks,
   Brynja the barmaid (mead hall + finale tavern), "Click for sound" cutscene fix, fixed backwards boots in the mead hall.
 - Known gaps / likely next asks:

@@ -14,7 +14,6 @@ const VILLAGE = {
   houses: [
     { x: 1385, y: 1545, h: 380, flip: false },
     { x: 1560, y: 2090, h: 370, flip: false },
-    { x: 1170, y: 1560, h: 360, flip: true },
     { x: 2570, y: 1395, h: 380, flip: false },
     { x: 1320, y: 1300, h: 360, flip: true },
   ],
@@ -36,6 +35,10 @@ const VILLAGE = {
   ],
   hay: [[1830, 1210], [1890, 1260], [1790, 1290]],
   forge: { x: 2560, y: 1990, h: 410 },   // the user's blacksmith diorama
+  landmarks: [   // more of the user's dioramas
+    { img: 'dispatch_office', x: 1060, y: 1470, h: 380, smoke: [0.56, 0.83] },   // harbor / dispatch office (Gunnhild)
+    { img: 'jarls_hall', x: 2360, y: 1060, h: 540 },                             // Jarl Bjorn's longhouse
+  ],
   walls: [ // low dry-stone walls along field edges
     [[1250, 2180], [1400, 2240], [1520, 2250]],
     [[2660, 2140], [2680, 2330]],
@@ -58,11 +61,6 @@ Object.assign(WorldScene.prototype, {
     for (const hs of VILLAGE.houses) {
       this.sprites.push({ kind: 'prop', img: 'w_longhouse', x: hs.x, y: hs.y, h: hs.h, big: true, flip: hs.flip, smoke: [hs.flip ? 0.43 : 0.57, 0.86] });
       this.solids.push({ x: hs.x, y: hs.y - hs.h * 0.2, r: hs.h * 0.27 });
-    }
-    // chimney smoke from the home cottage and the longhouses
-    for (const sp of this.sprites) {
-      if (sp.smoke) L.smoke.push({ sp, fx: sp.smoke[0], fy: sp.smoke[1], seed: R() * 99 });
-      if (sp.kind === 'node' && sp.node.id === 'home') L.smoke.push({ sp, fx: 0.62, fy: 0.9, seed: R() * 99 });
     }
     // lanterns along the town streets (every ~280 px, alternating sides)
     for (const r of this.roads) {
@@ -104,6 +102,7 @@ Object.assign(WorldScene.prototype, {
     L.bunting = VILLAGE.bunting.map(([a, b]) => ({ a, b, seed: R() * 9 }));
     for (const [a, b] of VILLAGE.bunting) { this.solids.push({ x: a[0], y: a[1], r: 8 }); this.solids.push({ x: b[0], y: b[1], r: 8 }); }
     for (const s of VILLAGE.stalls) { this.sprites.push({ kind: 'prop', img: 'w_' + s.img, x: s.x, y: s.y, h: s.h, flip: s.flip }); this.solids.push({ x: s.x, y: s.y - s.h * 0.18, r: s.h * 0.3 }); }
+    for (const b of VILLAGE.landmarks) { this.sprites.push({ kind: 'prop', img: 'w_' + b.img, x: b.x, y: b.y, h: b.h, big: true, smoke: b.smoke }); this.solids.push({ x: b.x, y: b.y - b.h * 0.2, r: b.h * 0.28 }); }
     const fg = VILLAGE.forge;
     this.sprites.push({ kind: 'prop', img: 'w_blacksmith', x: fg.x, y: fg.y, h: fg.h, big: true, smoke: [0.6, 0.78] });
     this.solids.push({ x: fg.x, y: fg.y - fg.h * 0.2, r: fg.h * 0.28 });
@@ -120,6 +119,11 @@ Object.assign(WorldScene.prototype, {
       this.sprites.push({ kind: 'prop', img: 'w_' + p, x, y, h, flip: R() < 0.5 });
       this.solids.push({ x, y: y - 8, r: h * 0.28 });
     }
+    // chimney smoke from the home cottage, the houses and the other buildings that have a chimney
+    for (const sp of this.sprites) {
+      if (sp.smoke) L.smoke.push({ sp, fx: sp.smoke[0], fy: sp.smoke[1], seed: R() * 99 });
+      if (sp.kind === 'node' && sp.node.id === 'home') L.smoke.push({ sp, fx: 0.62, fy: 0.9, seed: R() * 99 });
+    }
     // flower beds (ground)
     L.beds = [];
     for (const hs of VILLAGE.houses) for (let k = 0; k < 2; k++) L.beds.push({ x: hs.x + (k ? 1 : -1) * hs.h * 0.42 + (R() - 0.5) * 30, y: hs.y + 18 + R() * 20, n: 14 + Math.floor(R() * 8), seed: R() * 999 });
@@ -130,7 +134,7 @@ Object.assign(WorldScene.prototype, {
     flock('chicken', 2180, 2050, 5, 130);
     flock('chicken', 1400, 2420, 5, 140);
     flock('chicken', 1700, 1250, 4, 120);
-    for (let i = 0; i < 7; i++) A('sheep', pn.x + 40 + R() * (pn.w - 80), pn.y + 30 + R() * (pn.h - 50), 0, { pen: pn, col: R() < 0.2 ? 1 : 0 });
+    for (let i = 0; i < 7; i++) A('sheep', pn.x + 40 + R() * (pn.w - 80), pn.y + 30 + R() * (pn.h - 50), 0, { pen: pn, col: i === 2 ? 1 : 0 });
     for (let i = 0; i < 3; i++) A('pig', VILLAGE.wallow.x + (R() - 0.5) * 120, VILLAGE.wallow.y + (R() - 0.5) * 60, 110, { col: i % 2 });
     for (let i = 0; i < 3; i++) A('goat', 2900 + R() * 140, 2600 + R() * 100, 160, { col: i % 2 });
     A('dog', 1700, 1720, 420, { dog: true });

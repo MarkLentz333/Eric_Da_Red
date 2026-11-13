@@ -131,6 +131,7 @@ class WorldScene extends MapScene {
       const pn = VILLAGE.pen; keepClear.push([pn.x + pn.w / 2, pn.y + pn.h / 2, pn.w * 0.75 + 60]);
       for (const st of VILLAGE.stalls) keepClear.push([st.x, st.y, 160]);
       keepClear.push([TOWN.x, TOWN.y, 520]);
+      for (const b of VILLAGE.landmarks) keepClear.push([b.x, b.y - 60, b.h * 0.6]);
       keepClear.push([VILLAGE.forge.x, VILLAGE.forge.y - 60, 260]);
     }
     const clear = (x, y, extra = 0) => keepClear.every(([cx, cy, r]) => Math.hypot(x - cx, y - cy) > r + extra);
@@ -200,8 +201,9 @@ class WorldScene extends MapScene {
     }
     this.sprites.push({ kind: 'prop', img: 'w_' + MEAD_HALL.p, x: MEAD_HALL.x, y: MEAD_HALL.y, h: MEAD_HALL.h, big: true, hall: true });
     this.solids.push({ x: MEAD_HALL.x, y: MEAD_HALL.y - 40, r: MEAD_HALL.r });
-    this.sprites.push({ kind: 'range', x: AXE_RANGE.x, y: AXE_RANGE.y });
-    this.solids.push({ x: AXE_RANGE.x, y: AXE_RANGE.y - 10, r: 50 });
+    // the axe range: the user's diorama (fenced lane with targets); falls back to the drawn target
+    if (G.img.w_axe_range) { this.sprites.push({ kind: 'prop', img: 'w_axe_range', x: AXE_RANGE.x, y: AXE_RANGE.y, h: 350, big: true }); this.solids.push({ x: AXE_RANGE.x + 20, y: AXE_RANGE.y - 70, r: 120 }); }
+    else { this.sprites.push({ kind: 'range', x: AXE_RANGE.x, y: AXE_RANGE.y }); this.solids.push({ x: AXE_RANGE.x, y: AXE_RANGE.y - 10, r: 50 }); }
     // villagers
     this.npcs = WORLD_NPCS.map(d => ({ d, x: d.x, y: d.y, tx: d.x, ty: d.y, wait: rand(0.5, 3), t: rand(0, 9), face: 1, talk: 0, moving: false, img: null }));
     // roaming enemies
