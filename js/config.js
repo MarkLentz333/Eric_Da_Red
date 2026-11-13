@@ -19,8 +19,9 @@ window.CONFIG = {
   music: {
     intro: 'Music_Tracks/Viking Hip-Hop Rap Cover.mp3',
     background: 'Music_Tracks/Viking Techno Remix.mp3',
-    battle: null,
-    boss: null,
+    battle: null,   // null = the synthesized score in js/music.js ("Quartermaster's March")
+    boss: null,     // null = synth "Toll & Trouble" (Cousin Sven)
+    kraken: null,   // null = synth "The Backorder" (final boss)
   },
   musicVolume: 0.55,
   sfxVolume: 0.8,

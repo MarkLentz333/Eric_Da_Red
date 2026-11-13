@@ -1,0 +1,253 @@
+ERIC DA RED v3 - ART, VIDEO & MUSIC WISHLIST (updated 2026-11-12 for the village / perspective rebuild)
+=========================================================================================
+Nothing here is required. The game runs today without every item below.
+Drop finished files where each item says and tell me. I'll cut them out, size them and wire them in.
+The list is ordered by how much each item improves the game.
+
+EVERY PROMPT BELOW IS COMPLETE: copy everything between the >>> and <<< lines, nothing else to add.
+(The style, turnaround and Eric descriptions are already built into each one.)
+Where it says ATTACH, also attach that reference image in Flow.
+
+
+PRIORITY 1 - TOWNSFOLK & ANIMAL WALK CLIPS (new: the village is getting busy streets)
+These go through the same green-screen pipeline as Eric's walk (it worked great).
+Make each one in Flow as a VIDEO.  Save to: NewCharactersAdded\walk_<name>.mp4
+------------------------------------------------------------------------------------------
+1a  walk_villager_man.mp4
+>>>
+A Viking village man in his thirties with a short brown beard, a plain undyed wool tunic with a leather belt, brown trousers wrapped with leg bindings, and simple leather shoes. He carries a small sack over one shoulder. He walks at a steady relaxed pace from the left side of the frame to the right side, seen exactly from his side, arms swinging naturally, whole body head to feet always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+1b  walk_villager_woman.mp4
+>>>
+A Viking village woman in her twenties with a long auburn braid, a blue wool apron dress over a cream linen underdress, oval bronze brooches, and a woven basket of bread on her hip. She walks at a steady relaxed pace from the left side of the frame to the right side, seen exactly from her side, free arm swinging naturally, whole body head to feet always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+1c  walk_villager_old.mp4
+>>>
+An old Viking fisherman in his seventies with a long white beard tucked into his belt, an oilskin smock over a knitted sweater, a wicker fish basket on his hip and a pipe in his teeth. He walks at a slow shuffling pace from the left side of the frame to the right side, seen exactly from his side, whole body head to feet always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+1d  walk_villager_kid.mp4
+>>>
+A small Viking boy about 9 years old with messy straw-blond hair, a too-big fur cloak, and a wooden toy axe in one hand. He trots happily from the left side of the frame to the right side, seen exactly from his side, whole body head to feet always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+1e  walk_chicken.mp4
+>>>
+A plump brown farmyard hen walking and pecking at the ground, moving from the left side of the frame to the right side, seen exactly from the side, whole body always in frame, filling about half the frame height. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1f  walk_sheep.mp4
+>>>
+A fluffy cream-white sheep with a black face and black legs walking slowly and calmly, moving from the left side of the frame to the right side, seen exactly from the side, whole body always in frame, filling about half the frame height. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1g  walk_goat.mp4
+>>>
+A shaggy brown-and-white Nordic goat with curved horns and a little beard walking at a lively pace, moving from the left side of the frame to the right side, seen exactly from the side, whole body always in frame, filling about half the frame height. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1h  walk_dog.mp4
+>>>
+A big friendly gray Norwegian elkhound dog with a curled tail trotting happily, tongue out, moving from the left side of the frame to the right side, seen exactly from the side, whole body always in frame, filling about half the frame height. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1i  walk_pig.mp4
+>>>
+A muddy pink-and-black spotted farm pig trotting along, snout sniffing, moving from the left side of the frame to the right side, seen exactly from the side, whole body always in frame, filling about half the frame height. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1j  walk_horse.mp4
+>>>
+A sturdy dun-colored Fjord horse with a striped two-tone mane, wearing a simple leather bridle, walking calmly, moving from the left side of the frame to the right side, seen exactly from the side, whole body hooves to ears always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail. No text, no watermark, no logos.
+<<<
+1k  walk_eric_away.mp4   (the one walk Eric is still missing: walking straight away from the camera)
+ATTACH: source_art\Character\ (Eric's character sheet)
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes on his back. Seen from directly behind, he walks straight away from the camera at a steady relaxed pace, walking in place as if on a treadmill so he stays the same size in the frame, arms swinging naturally, whole body head to boots always in frame. LOCKED camera, no camera movement, no zoom. Plain solid bright chroma-green background, even flat lighting, no shadows on the background, no floor visible. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 2 - VILLAGERS (they stand around today as dark recolored copies of Eric)
+IMAGES.  Save to: NewCharactersAdded\<name>.jpg
+------------------------------------------------------------------------------------------
+2a  gunnhild.jpg - Gunnhild the Harbormaster (today she's only a lantern by the harbor office)
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a weathered, sharp-eyed Viking woman in her fifties, silver-blonde braids wound with blue cord, a sea-salt-stained wool cloak with a walrus-ivory brooch, a brass spyglass on a strap, sturdy sea boots, wind-burned cheeks, an expression of tired dry amusement. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+2b  olaf.jpg - Olaf the Dockhand
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a lanky, nervous young Viking dockhand with a scruffy patchy beard, a too-big knit wool cap, a rope coil over one shoulder, a bandaged hand (a crate bit him), wide worried eyes and a sheepish half-smile. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+2c  haldor.jpg - Old Haldor the fisherman
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a wiry, cheerful old Viking fisherman in his seventies with a long white beard tucked into his belt, an oilskin fishing smock over a knitted sweater, a wicker fish basket on his hip and a pipe in his teeth. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+2d  bjarni.jpg - Bjarni the Axe-Master (runs the axe-throwing range)
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a huge, bald, tattooed Viking with a black braided beard, a leather apron full of throwing axes, bare muscular arms with wrist wraps, a big friendly grin and one scarred eyebrow. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+2e  ulf.jpg - Little Ulf, a village kid (about 9 years old)
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a small Viking boy about 9 years old with messy straw-blond hair, a wooden toy axe and shield, a too-big fur cloak dragging on the ground, and a gap-toothed excited grin. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+2f  jarl.jpg - Jarl Bjorn the Thirsty (also gives him a portrait; today he only has a letter emblem)
+>>>
+Character turnaround sheet, 4 views side by side: front, 3/4, side, back. Full body head to boots, neutral relaxed A-pose, feet fully visible, plain smooth dark charcoal-gray studio background, even soft lighting, no floor grid, no labels, 16:9 (2752x1536). The character: a jolly, enormous Viking jarl with a thick brown beard braided into three forks, a gold circlet crown slightly askew, a bearskin cloak over red embroidered robes, holding a giant ornate drinking horn. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 3 - TOWN BUILDINGS FOR THE WALKABLE WORLD
+These must match the existing map props (stylized 3D miniatures, NOT photoreal), so they use their own style.
+IMAGES.  Save to: source_art\Objects\<name>.png
+------------------------------------------------------------------------------------------
+3a  drunken_goat.png  (today the hall uses the thatched stilt hut)
+>>>
+A cozy two-story Viking mead hall with a turf roof, a carved goat head over the door, a wooden sign with a painted goat holding a mug, warm light in the windows, two barrels by the door. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3b  axe_range.png
+>>>
+An outdoor axe-throwing lane: a wooden fence pen with two round log-slice targets painted with rings, axes stuck in them, a rack of throwing axes. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3c  jarls_hall.png
+>>>
+A grand Viking longhouse with dragon-head gable ends, shields on the walls, banners and wide steps. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3d  market_stall.png
+>>>
+A little Viking market stall with a red-and-cream striped awning and baskets of fish, bread and cheese on the counter. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3e  blacksmith.png
+>>>
+An open-sided Viking forge with an anvil, glowing coals, a water barrel and hanging tools. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3f  signpost.png
+>>>
+A carved wooden Viking crossroads signpost with three blank arrow boards. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3g  dispatch_office.png  (Darrell's HQ joke)
+>>>
+A small timber Viking "dispatch office" hut with a notice board covered in pinned scrolls, a little bell on a post, and a cart parked outside. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+3h  longhouse_small.png  (more houses for the village)
+>>>
+A small Viking family longhouse with a turf roof, smoke hole, wooden door with iron hinges, a woodpile and a bench by the wall. Stylized isometric 3D miniature diorama game asset, seen from a 3/4 top-down angle, sitting on its own small square grass tile with a visible soil underside. Square 1024x1024, the object centered, plain light-gray background, soft warm lighting, stylized (not photoreal) game asset look. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 4 - PORTRAITS STILL MISSING
+IMAGES.  Save to: source_art\Portraits\<name>.jpg
+------------------------------------------------------------------------------------------
+4a  kraken_portrait.jpg
+>>>
+Extreme close-up of a colossal purple kraken's single amber eye wearing a gold monocle on a chain, barnacled skin with soggy parchment invoices sealed with red wax, rain, lightning-lit storm sea. Menacing but faintly bureaucratic. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4b  sven_smug.jpg
+>>>
+Cousin Sven, Eric's look-alike cousin: a stocky Viking with a strawberry-blond braided beard, no spectacles, showy polished armor, a ledger chained to his belt. Chest-up portrait, looking slightly toward camera-left, eyebrow raised, smirking, holding a long scroll. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4c  sven_furious.jpg
+>>>
+Cousin Sven, Eric's look-alike cousin: a stocky Viking with a strawberry-blond braided beard, no spectacles, showy polished armor, a ledger chained to his belt. Chest-up portrait, looking slightly toward camera-left, red-faced and shouting, a crumpled scroll in his fist. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4d  sven_defeated.jpg
+>>>
+Cousin Sven, Eric's look-alike cousin: a stocky Viking with a strawberry-blond braided beard, no spectacles, showy polished armor, a ledger chained to his belt. Chest-up portrait, looking slightly toward camera-left, snow-soaked, helmet crooked, scroll torn, a sulky pout. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4e  eric_hurt.jpg
+ATTACH: source_art\Character\ (Eric's character sheet)
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Chest-up portrait, looking slightly toward camera-left, wincing, spectacles knocked crooked, soot on his face. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4f  eric_victory.jpg
+ATTACH: source_art\Character\ (Eric's character sheet)
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Chest-up portrait, looking slightly toward camera-left, a huge proud grin, one axe resting on his shoulder. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4g  darrell_list.jpg  (optional)
+ATTACH: NewCharactersAdded\Create_3D_Darrell.jpg
+>>>
+Darrell, a Viking boss with a gray beard, glasses, a worn trucker-style cap, and fur and steel armor, exactly as in the attached character sheet. Chest-up portrait, looking slightly toward camera-left, deadpan, holding up an absurdly long scroll of tasks. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4h  thomas_huh.jpg  (optional)
+ATTACH: NewCharactersAdded\Viking_character_Thomas.jpg
+>>>
+Thomas, a Viking VP with long braided gray hair and a fur mantle, exactly as in the attached character sheet. Chest-up portrait, looking slightly toward camera-left, leaning in, one eyebrow up, palms out, a skeptical "...huh?" expression. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+4i  nichole_smile.jpg  (optional)
+ATTACH: NewCharactersAdded\Create_3D_Nichole.jpg
+>>>
+Nichole, a Viking office manager with dark braided hair, a fur collar and a kind smile, exactly as in the attached character sheet. Chest-up portrait, looking slightly toward camera-left, smiling warmly, holding out a mug of mead. 4:5 portrait (1024x1280), dark smoky background. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 5 - BATTLE BACKGROUNDS
+IMAGES.  Save to: source_art\Backgrounds\<name>.jpg
+------------------------------------------------------------------------------------------
+5a  bg_warehouse.jpg
+>>>
+Interior of a vast dim Viking timber warehouse at night: towering shelves of crates, barrels and scrolls, hanging lanterns, snow drifting through roof gaps, loose parchment on the plank floor, blue moonlight mixed with lantern glow. No people. 16:9 wide (at least 2200x1240), the lower third open and flat for characters to stand on. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+5b  bg_longboat.jpg
+>>>
+Along the deck of a moored Viking longboat at sunset, water sloshing over the planks, tangled nets, leaking mead barrels, a half-furled striped sail. No people. 16:9 wide (at least 2200x1240), the lower third open and flat for characters to stand on. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+5c  bg_bridge.jpg
+>>>
+An old arched stone bridge over a rushing river on a snowy night, torches on posts, a wooden toll sign with no readable text, a tollbooth hut with a lantern. No people. 16:9 wide (at least 2200x1240), the lower third open and flat for characters to stand on. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+5d  bg_meadhall.jpg  (today the mead hall reuses the tavern art)
+>>>
+The inside of a cozy Viking mead hall seen from the side at floor level: long tables, a crackling hearth, hanging shields, warm firelight, an open floor in the foreground for characters to stand on. No people. 16:9 wide (at least 2200x1240), the lower third open and flat. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 6 - NEW FLOW CUTSCENES (same workflow as before: 2 takes each into Cutscenes\)
+VIDEOS.  ATTACH the character sheets for everyone in the shot.
+------------------------------------------------------------------------------------------
+6a  cut_meadhall.mp4 - first visit to the Drunken Goat
+ATTACH: Eric's sheet, Create_3D_Darrell.jpg, Viking_character_Thomas.jpg, Create_3D_Nichole.jpg
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Eric pushes open the heavy door of a warm, crowded Viking mead hall. Darrell (gray beard, glasses, a worn trucker-style cap, fur and steel armor) unrolls a list of tasks so long it rolls across the floor to Eric's boots. Behind him Thomas (long braided gray hair, fur mantle) crosses his arms and raises an eyebrow. Nichole (dark braided hair, fur collar, kind smile) slides Eric a mug of mead along the table. Eric sighs and takes the mead. Comedic, warm. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+6b  cut_road.mp4 - the Forest Road
+ATTACH: Eric's sheet
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Eric pushes a handcart of mead barrels and a covered golden goat statue along a pine-forest road. A huge gnarled oak crashes across the road and two glowing green eyes open in the bark. Eric sighs and rolls up his sleeves. Comedic, cinematic. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+6c  cut_woodpile.mp4 - smugglers at the woodpile
+ATTACH: Eric's sheet
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Dusk at a forest woodpile; Eric inspects cart tracks in the mud, then three hooded smugglers with red glowing eyes step out of the trees, one holding Eric's missing mead barrel. Eric adjusts his spectacles and draws his axes. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+6d  cut_sven_defeat.mp4 - Sven loses the bridge
+ATTACH: Eric's sheet
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. A snowy torch-lit stone bridge at night. Cousin Sven (Eric's look-alike: strawberry-blond braided beard, no spectacles, showy armor) sits in a snowbank, his scroll torn and fluttering away. Eric writes in his ledger, tears off a receipt, hands it to Sven, and walks off carrying a small golden goat statue. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+6e  cut_camp.mp4 - a quiet night at camp
+ATTACH: Eric's sheet
+>>>
+Eric Da Red: a stocky middle-aged Viking quartermaster with a braided copper-red undercut, a huge braided red beard with silver beads, small round wire-rim spectacles, a dark-green tunic under weathered leather armor with rune-etched steel pauldrons, a fur mantle, and two bearded battle-axes. Night in a pine forest; Eric sits on a log by a campfire, spectacles pushed up, roasting a fish on a stick while balancing an open ledger on his knee. A single snowflake lands on his nose. 16:9, 8 seconds. Photorealistic cinematic 3D, Unreal Engine 5 look, rich detail, gritty-but-comedic Viking saga. No text, no watermark, no logos.
+<<<
+
+
+PRIORITY 7 - OPTIONAL REAL MUSIC (Suno / Udio).  Save to Music_Tracks\
+The game already plays its own generated score for every one of these. Recorded songs are an upgrade.
+------------------------------------------------------------------------------------------
+7a  battle.mp3
+>>>
+"Quartermaster's March": epic Nordic folk-metal battle theme, instrumental, loopable, 140 bpm, D minor, war drums, tagelharpa drone, distorted low strings, heroic horn melody.
+<<<
+7b  boss.mp3
+>>>
+"Toll & Trouble": pompous heavy half-time Viking boss theme, instrumental, loopable, 116 bpm, C minor, brass fanfare with comedic bureaucratic swagger, taiko, low wordless male choir.
+<<<
+7c  kraken.mp3
+>>>
+"The Backorder": dark epic final-boss theme, instrumental, loopable, 96 bpm, D phrygian, deep choir, thunderous drums, storm ambience, cello ostinato, building to a huge climax.
+<<<
+7d  tavern.mp3
+>>>
+"Last Call at the Drunken Goat": rowdy, cheerful Viking tavern jig, instrumental, loopable, 128 bpm, fiddle, hurdy-gurdy, frame drum, stomping and clapping, mugs clinking.
+<<<
+7e  town.mp3
+>>>
+"Fjordheim Morning": gentle Nordic folk exploration theme for walking around a village, instrumental, loopable, nyckelharpa, soft harp, light hand drum, birds and harbor ambience.
+<<<
+7f  victory.mp3
+>>>
+A 6-8 second triumphant Viking horn fanfare with drums, instrumental, ending on a big chord.
+<<<

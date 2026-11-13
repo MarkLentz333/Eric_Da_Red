@@ -182,7 +182,7 @@ class BannerOverlay {
     c.restore();
   }
 }
-const Banner = { show(small, big) { return new Promise(res => { G.overlay = new BannerOverlay(small, big, res); AudioSys.sfx('slam'); }); } };
+const Banner = { show(small, big) { return new Promise(res => { G.overlay = new BannerOverlay(small, big, res); AudioSys.sfx('slam'); AudioSys.sting('chapter'); }); } };
 
 // ---------------------------------------------------------------- notice (rewards etc.)
 class NoticeOverlay {
@@ -232,7 +232,8 @@ class CutsceneOverlay {
   }
   start(v) {
     this.ct = 0; this.started = false;
-    v.play().catch(() => { v.muted = true; v.play().catch(() => this.advance(true)); });
+    if (this.needSound) v.muted = true;
+    v.play().catch(() => { v.muted = true; this.needSound = true; v.play().catch(() => this.advance(true)); });
     if (this.idx + 1 < this.names.length) this.nextV = this.make(this.names[this.idx + 1]);
   }
   advance(failed) {
@@ -259,7 +260,12 @@ class CutsceneOverlay {
     if (!this.closing) this.a = Math.min(1, this.a + dt * 3);
     if (!this.started && this.ct > 6) return this.advance(true); // never started — give up on this clip
     if (this.t > 0.4 && !this.closing) {
-      if (cancelHit()) { AudioSys.sfx('click'); this.close(); }
+      if (this.needSound && (G.mouse.clicked || confirmHit() || cancelHit())) {   // first input: unmute, keep playing
+        G.mouse.clicked = false; this.needSound = false;
+        for (const v of [this.v, this.nextV]) if (v) { v.muted = false; v.volume = 1; }
+        if (this.v.paused) this.v.play().catch(() => {});
+      }
+      else if (cancelHit()) { AudioSys.sfx('click'); this.close(); }
       else if (G.mouse.clicked || confirmHit()) { G.mouse.clicked = false; AudioSys.sfx('click'); this.advance(); this.t = 0.2; }
     }
   }
@@ -268,7 +274,11 @@ class CutsceneOverlay {
     c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
     if (this.v.readyState >= 2) drawCover(c, this.v);
     const multi = this.names.length > 1;
-    if (this.t > 0.6 && !this.closing) txt(c, multi ? 'Click — next shot   ·   Esc — skip all  ▸' : 'Click / Esc — skip  ▸', W - 34, H - 34, { size: 22, align: 'right', color: 'rgba(255,255,255,' + (0.5 * Math.min(1, (this.t - 0.6) * 2)) + ')' });
+    if (this.needSound && !this.closing) {
+      const pa = 0.65 + Math.sin(this.t * 4) * 0.25; rr(c, W / 2 - 190, 40, 380, 56, 28); c.fillStyle = `rgba(0,0,0,${0.6 * pa})`; c.fill();
+      txt(c, '\u{1F507}  Click for sound', W / 2, 68, { size: 26, fam: F.head, weight: 700, align: 'center', base: 'middle', color: `rgba(255,230,170,${pa})` });
+    }
+    else if (this.t > 0.6 && !this.closing) txt(c, multi ? 'Click — next shot   ·   Esc — skip all  ▸' : 'Click / Esc — skip  ▸', W - 34, H - 34, { size: 22, align: 'right', color: 'rgba(255,255,255,' + (0.5 * Math.min(1, (this.t - 0.6) * 2)) + ')' });
     c.restore();
   }
 }

@@ -82,6 +82,7 @@ class TavernScene {
     await wait(1.0);
     AudioSys.sfx('cheer'); this.skal(4);
     await Dialog.play('tavern_cheers', L => { if (L.s === 'crowd') { AudioSys.sfx('cheer'); this.skal(7); } });
+    await Dialog.play([{ s: 'barmaid', t: "Another round for Eric Da Red! The man who closed the Hedeby shipment drinks free tonight. And every night, if he keeps smiling at me like that." }]);
 
     // 2. close-up: the reach
     await wait(0.3);
@@ -165,6 +166,7 @@ class TavernScene {
     this.wolfOn = true; this.ericGone = true; this.toast = 1; this.laughing = true;
     AudioSys.playMusic('intro');
     await wait(0.6);
+    await Dialog.play([{ s: 'barmaid', t: "Another round for Eric Da Red! The man who closed the Hedeby shipment drinks free tonight. And every night, if he keeps smiling at me like that." }]);
     AudioSys.sfx('cheer'); this.skal(8);
     await Dialog.play('tavern_toast', L => {
       if (L.s === 'crowd') { AudioSys.sfx('cheer'); this.skal(8); this.clink(); }
@@ -211,6 +213,15 @@ class TavernScene {
     if (this.phase === 'roll') EndingScene.prototype.drawRoll.call(this, c);
   }
 
+  // Brynja the barmaid (assets/sprites/npc_barmaid.png): serving at the left end of the table, the table hides her cropped hem
+  drawBarmaid(c) {
+    const img = G.img.npc_barmaid; if (!img) return;
+    const h = 640, w = img.width * h / img.height, x = 250 + Math.sin(this.t * 1.1) * 6, base = TAV.TABLE_BACK + 190;
+    c.save(); c.translate(x, base); c.scale(1, 1 + Math.sin(this.t * 2) * 0.005);
+    c.drawImage(img, -w / 2, -h, w, h);
+    c.globalAlpha = 0.14; c.drawImage(tinted(img, '#ff9a40'), -w / 2, -h, w, h);
+    c.restore();
+  }
   drawWide(c) {
     const C2 = this.cam, t = this.t;
     c.save();
@@ -224,6 +235,7 @@ class TavernScene {
 
     if (this.wolfOn) this.drawWolf(c);
     if (!this.ericGone && !this.fly) this.drawEric(c);
+    this.drawBarmaid(c);
     this.drawTable(c);
     this.drawTableItems(c);
 

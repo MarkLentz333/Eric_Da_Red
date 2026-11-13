@@ -16,6 +16,7 @@ const IMAGES = {
   eric_armR: 'assets/sprites/eric_armR.png',
   wolf_tag: 'assets/ui/wolf_tag.png',
   bg_tavern: 'assets/bg/tavern.jpg',
+  bg_meadhall: 'assets/bg/meadhall.jpg',   // user's mead hall interior (Drunken Goat)
   smuggler: 'assets/sprites/smuggler.png',
   sven: 'assets/sprites/sven.png',
   en_crate: 'assets/sprites/en_crate.png',
@@ -207,13 +208,13 @@ const ENEMIES = {
 
 // ---------------------------------------------------------------- encounters
 const ENCOUNTERS = {
-  docks: { title: 'Quality Control', bg: 'bg_docks', amb: 'embers', enemies: ['crate', 'crate'], xp: 30, drops: { herring: 1 } },
-  boat: { title: 'The Leaky Longboat', bg: 'bg_docks', amb: 'embers', enemies: ['nets', 'barrel'], xp: 45, drops: { mead: 1 } },
-  warehouse: { title: 'The Living Paperwork', bg: 'bg_night', amb: 'snow', enemies: ['manifest', 'triplicate'], xp: 60, drops: { ink: 2 } },
-  road: { title: 'The Forest Road', bg: 'bg_forest', amb: 'leaves', enemies: ['oak', 'cart'], xp: 90, drops: { mead: 1, tea: 1 } },
-  woodpile: { title: 'Smugglers!', bg: 'bg_forest', amb: 'leaves', enemies: ['smuggler', 'crate', 'smuggler'], xp: 95, drops: { herring: 2, rune: 1 } },
-  bridge: { title: 'The Toll Bridge', bg: 'bg_night', amb: 'snow', enemies: ['manifest', 'sven'], xp: 150, drops: { mead: 2, ink: 1 }, boss: true },
-  fjord: { title: 'The Backorder Kraken', bg: 'bg_storm', amb: 'storm', enemies: ['tentacle', 'kraken', 'tentacle'], xp: 0, drops: {}, boss: true, final: true, kraken: true },
+  docks: { par: 3, title: 'Quality Control', bg: 'bg_docks', amb: 'embers', enemies: ['crate', 'crate'], xp: 30, drops: { herring: 1 } },
+  boat: { par: 4, title: 'The Leaky Longboat', bg: 'bg_docks', amb: 'embers', enemies: ['nets', 'barrel'], xp: 45, drops: { mead: 1 } },
+  warehouse: { par: 5, title: 'The Living Paperwork', bg: 'bg_night', amb: 'snow', enemies: ['manifest', 'triplicate'], xp: 60, drops: { ink: 2 } },
+  road: { par: 5, title: 'The Forest Road', bg: 'bg_forest', amb: 'leaves', enemies: ['oak', 'cart'], xp: 90, drops: { mead: 1, tea: 1 } },
+  woodpile: { par: 5, title: 'Smugglers!', bg: 'bg_forest', amb: 'leaves', enemies: ['smuggler', 'crate', 'smuggler'], xp: 95, drops: { herring: 2, rune: 1 } },
+  bridge: { par: 7, title: 'The Toll Bridge', bg: 'bg_night', amb: 'snow', enemies: ['manifest', 'sven'], xp: 150, drops: { mead: 2, ink: 1 }, boss: true },
+  fjord: { par: 10, title: 'The Backorder Kraken', bg: 'bg_storm', amb: 'storm', enemies: ['tentacle', 'kraken', 'tentacle'], xp: 0, drops: {}, boss: true, final: true, kraken: true },
 };
 
 // ---------------------------------------------------------------- dialogue
