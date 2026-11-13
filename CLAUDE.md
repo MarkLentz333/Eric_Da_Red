@@ -4,18 +4,26 @@ Vanilla-JS canvas RPG (1920x1080 logical, DPR-scaled). No build step and no depe
 It's live on GitHub Pages: https://marklentz333.github.io/Eric_Da_Red/ (repo MarkLentz333/Eric_Da_Red, branch `main`).
 Pushing to `main` redeploys the site in about a minute.
 
-## Where things stand (resume here) — last updated 2026-11-12
-- **Live site = original v1** (`main` @ 521f8a3). The user had v1 restored after an unrequested push. NEVER push, merge to `main`,
-  or touch GitHub/the live site without asking the user first, every time. Never put the user's real email in commits.
-- **Active work = branch `v3`**, committed locally only (origin/v3 is still at c8ae67d). Commit locally freely, push only when asked.
-- Latest rounds: v3.2 filmed walk cycles, shieldmaidens, Brynja; v3.3 perspective camera + full village with the user's building
-  art, real art for every villager, animals, walking townsfolk (filmed), mead hall background. See the overworld bullets below.
+## Where things stand (resume here) — last updated 2026-11-13
+- **Live site = original v1** (`main` @ 521f8a3) until the user approves a v3 release. The user had v1 restored after an
+  unrequested push. NEVER push, merge to `main`, or touch GitHub/the live site without asking the user first, every time.
+  Never put the user's real email in commits.
+- **Active work = branch `v3`** (v3.4). Commit locally freely, push only when asked.
+- **What v3 has now:** v2 combat (intents, parry, rhythm, ratings, adaptive score); walkable perspective overworld with the
+  full Fjordheim village from the user's building art; real art + portraits for every villager; filmed walk cycles for Eric
+  and the townsfolk; shieldmaidens + Brynja; mead hall with the real-life crew and side quests; axe range; dragon SQI quest;
+  skirmishes and hidden caches; big map with fast travel + minimap. v3.4 (the user's "looks a lot better" round): pulled-back
+  strategy-RPG camera, people at door height (ERIC_H 92) with buildings at full size so their detail shows, silhouette instead of
+  see-through houses, A* click-to-move with hover rings, conversation stage with large characters, art-accurate collision.
+- **Still planned / wanted:** filmed animal clips to replace the procedural animals (1h dog, 1e chicken, 1f sheep first, then
+  goat/pig/horse), 1k Eric walking away (his walk-up is a mirrored single step), 1c old man + 1d kid walk clips (more townsfolk:
+  the user notes more background walkers are coming, so keep the street count modest, currently 5), 2f jarl, 3f signpost,
+  4x portraits, 5a-5c backgrounds, 6x cutscenes, 7x music. Ideas floated, not requested: chapter 2 starring WolfZtnel,
+  Flow-clip audio in the trailer.
 - The user's image/video credits reset on **2026-11-19**. Wishlist: `docs/ASSET_PROMPTS.txt` (every prompt self-contained,
   copy between >>> and <<<); `docs/TOP_PROMPTS.txt` = the current short list. New files arrive in
   `C:/Users/ronin/Downloads/New Assets/` (named like `3h  longhouse_small.png.jpg`); copy into source_art/ before cutting.
-- Done from the wishlist: 1a/1b (villager walk clips), 2a-2e (villagers), 3a-3e, 3g, 3h, 5d. Still open: 1c-1k walk clips
-  (old man, kid, chicken, sheep, goat, dog, pig, horse, Eric walking away), 2f jarl, 3f signpost, 4x portraits, 5a-5c bgs,
-  6x cutscenes, 7x music. Best next: 1h dog + 1e chicken + 1f sheep clips (would replace the procedural animals), 1k Eric away.
+- Done from the wishlist: 1a/1b (villager walk clips), 2a-2e (villagers), 3a-3e, 3g, 3h, 5d (open items: see "Still planned").
 - Known rough spots: procedural animals are cartoonier than the art; the diorama grass tiles under buildings show faint edges;
   townsfolk use only side-view sheets (they slide a bit when walking straight up/down a road); headless perf ~7-9 ms/frame.
 - Pipelines: buildings `tools/cut/diorama_cut.py <img> <name> 620` → add to NAMES in `tools/rig/blend_bases.py` → register

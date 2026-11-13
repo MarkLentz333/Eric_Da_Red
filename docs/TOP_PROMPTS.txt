@@ -1,4 +1,5 @@
-STATUS 2026-11-12: everything from rounds 1 and 2 is in the game (all buildings, all villagers, villager walk clips 1a/1b).
+STATUS 2026-11-13: everything from rounds 1 and 2 is in the game (all buildings, all villagers, villager walk clips 1a/1b).
+The overworld now uses small, door-height people and a pulled-back camera, so walk clips should show the whole body, side-on, on plain green.
 NEXT WHEN CREDITS RESET (Nov 19), best first: walk clips 1h dog, 1e chicken, 1f sheep, 1k Eric walking away, 1c old man, 1d kid
 (all in docs/ASSET_PROMPTS.txt section 1). Then 3f signpost, 2f jarl.
 
