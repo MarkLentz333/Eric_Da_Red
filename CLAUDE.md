@@ -5,10 +5,11 @@ It's live on GitHub Pages: https://marklentz333.github.io/Eric_Da_Red/ (repo Mar
 Pushing to `main` redeploys the site in about a minute.
 
 ## Where things stand (resume here) — last updated 2026-11-13
-- **Live site = original v1** (`main` @ 521f8a3) until the user approves a v3 release. The user had v1 restored after an
-  unrequested push. NEVER push, merge to `main`, or touch GitHub/the live site without asking the user first, every time.
-  Never put the user's real email in commits.
-- **Active work = branch `v3`** (v3.4). Commit locally freely, push only when asked.
+- **Live site = v3.4** (released 2026-11-13 at the user's request: `main` @ 264d4cf, tree identical to `v3`). Original v1 is
+  kept as tag `v1.0` / branch `backup/v1`. NEVER push, merge to `main`, or touch GitHub/the live site without asking the user
+  first, every time (an earlier unrequested push had to be undone). Never put the user's real email in commits.
+- **Active work = branch `v3`** (pushed to origin). Commit locally freely, push only when asked. To release again (when asked):
+  `git commit-tree "v3^{tree}" -p main -p v3 -m ...` → `git branch -f main <sha>` → push main; Pages builds in ~1 min.
 - **What v3 has now:** v2 combat (intents, parry, rhythm, ratings, adaptive score); walkable perspective overworld with the
   full Fjordheim village from the user's building art; real art + portraits for every villager; filmed walk cycles for Eric
   and the townsfolk; shieldmaidens + Brynja; mead hall with the real-life crew and side quests; axe range; dragon SQI quest;
