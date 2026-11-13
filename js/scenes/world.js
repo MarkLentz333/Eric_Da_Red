@@ -5,11 +5,11 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 186, ERIC_R = 22, WALK = 330, ZOOM = 1.12;
+const ERIC_H = 150, ERIC_R = 22, WALK = 330, ZOOM = 1.12;
 // v3.3 perspective camera: the ground is a tilted plane seen through a pinhole camera (pitch = tilt from the ground,
 // F = focal length in px, zoom = scale at the focus point, h0 = screen row of the focus point). Standing things are
 // billboards scaled by depth; the ground is rendered flat into tiles and projected row by row.
-const CAM3 = { pitch: 0.86, F: 1750, zoom: 1.0, h0: 0.6, strip: 2, tile: 512 };
+const CAM3 = { pitch: 1.0, F: 1750, zoom: 0.66, h0: 0.6, strip: 2, tile: 512, gs: 0.72 };   // gs = resolution of the per-frame ground layer (world px -> canvas px)
 // filmed walk cycles (tools/walk/extract_walk.py -> js/walk_data.js); SIDE_IDLE = side frame with the feet together
 const SIDE_IDLE = 27;
 // paper-doll rig for the overworld walk cycle (parts cut by tools/rig/rig_eric.py; sprite-pixel pivots)
@@ -263,6 +263,7 @@ class WorldScene extends MapScene {
     this.t = 0; this.pack = false; this.menu = false; this.bigmap = false; this.hover = null;
     const pos = Game.save.pos, home = WORLD_NODES.home;
     this.e = { x: pos ? pos.x : home.ix - 40, y: pos ? pos.y : home.iy + 140, dir: 'front', flip: false, anim: 0, vx: 0, vy: 0, moving: false };
+    setTimeout(() => { if (G.scene === this) this.navGrid(); }, 600);   // build the click-to-move grid off the first frames
     this.target = null; this.focus = null; this.autoArm = false; this.armT = 1.5; this.puffs = []; this.look = { x: 0, y: 0 };
     this.cam = { x: 0, y: 0 }; this.snapCam(); this.tiles = this.tiles || new Map();
     this.region = this.regionAt(this.e.x, this.e.y); this.regionT = 3.2;
@@ -376,8 +377,9 @@ class WorldScene extends MapScene {
     try {
       const sets = p.d.talk, lines = sets[p.talk % sets.length]; p.talk++;
       AudioSys.sfx('blip');
+      this.convo = { npc: p, t: 0, out: 0 };
       await Dialog.play(lines);
-    } finally { Game.busy = false; }
+    } finally { Game.busy = false; if (this.convo) this.convo.out = 1e-3; }
   }
   async openRange() {
     if (Game.busy) return; Game.busy = true;
@@ -464,6 +466,84 @@ class WorldScene extends MapScene {
   }
 
   // ------------------------------------------------------------------ update
+  // the interactable under the mouse (screen-space: its body, not its feet), nearest the cursor wins
+  pickAt(mx, my) {
+    let best = null, bd = 1e9;
+    for (const it of this.interactables()) if (it.act) {
+      const q = this.proj(it.x, it.y), hh = (it.npc ? ERIC_H * (it.npc.d.scale || 1) : 200) * q.s, hw = Math.max(34, 60 * q.s);
+      if (Math.abs(mx - q.x) < hw && my > q.y - hh * 1.05 && my < q.y + 26 * q.s) {
+        const d = Math.hypot(mx - q.x, my - (q.y - hh * 0.5)); if (d < bd) { bd = d; best = it; }
+      }
+    }
+    return best;
+  }
+  // ---- walk grid for click-to-move (rebuilt when the gate/bridge opens or solids change)
+  navGrid() {
+    const key = this.gateOpen() + '|' + this.cleared('bridge') + '|' + this.solids.length;
+    if (this._nav && this._nav.key === key) return this._nav;
+    const C = 32, nx = Math.ceil(WORLD.w / C), ny = Math.ceil(WORLD.h / C), b = new Uint8Array(nx * ny);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) b[j * nx + i] = this.blocked(i * C + C / 2, j * C + C / 2, ERIC_R + 4) ? 1 : 0;
+    return (this._nav = { key, C, nx, ny, b });
+  }
+  clearLine(ax, ay, bx, by) {
+    const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 12);
+    for (let k = 1; k <= n; k++) { const t = k / n; if (this.blocked(ax + (bx - ax) * t, ay + (by - ay) * t, ERIC_R + 2)) return false; }
+    return true;
+  }
+  // A* on the grid, then string-pulled into a few straight legs. Returns [[x,y],...] ending at the goal (or the nearest
+  // walkable spot to it), or null when there's no way there.
+  findPath(sx, sy, gx, gy) {
+    if (this.clearLine(sx, sy, gx, gy)) return [[gx, gy]];
+    const { C, nx, ny, b } = this.navGrid();
+    const ci = x => clamp(Math.floor(x / C), 0, nx - 1), cj = y => clamp(Math.floor(y / C), 0, ny - 1);
+    const nearFree = (i0, j0, px, py) => {   // nearest walkable cell to (i0,j0), ties broken toward (px,py)
+      let best = -1, bd = 1e9;
+      for (let r = 1; r < 14 && best < 0; r++) for (let j = j0 - r; j <= j0 + r; j++) for (let i = i0 - r; i <= i0 + r; i++) {
+        if (i < 0 || j < 0 || i >= nx || j >= ny || b[j * nx + i]) continue;
+        const d = (i - i0) ** 2 + (j - j0) ** 2 + 0.002 * ((i * C - px) ** 2 + (j * C - py) ** 2) / (C * C);
+        if (d < bd) { bd = d; best = j * nx + i; }
+      }
+      return best;
+    };
+    const si = ci(sx), sj = cj(sy), s0 = sj * nx + si;   // Eric may stand in a padded edge or a tiny pocket: cells near him stay passable
+    let gi = ci(gx), gj = cj(gy);
+    if (b[gj * nx + gi]) {   // clicked on a house/water: aim for the nearest free cell (prefer the side facing Eric)
+      const best = nearFree(gi, gj, sx, sy);
+      if (best < 0) return null;
+      gi = best % nx; gj = (best / nx) | 0; gx = gi * C + C / 2; gy = gj * C + C / 2;
+    }
+    const g0 = gj * nx + gi, N = nx * ny;
+    const g = new Float32Array(N).fill(1e9), from = new Int32Array(N).fill(-1), shut = new Uint8Array(N);
+    const heap = [], f = new Float32Array(N);
+    const hfn = k => { const dx = Math.abs(k % nx - gi), dy = Math.abs(((k / nx) | 0) - gj); return (dx + dy) + (1.4142 - 2) * Math.min(dx, dy); };
+    const push = k => { heap.push(k); let i = heap.length - 1; while (i) { const p = (i - 1) >> 1; if (f[heap[p]] <= f[k]) break; heap[i] = heap[p]; i = p; } heap[i] = k; };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { let i = 0; for (;;) { let l = 2 * i + 1, r = l + 1, m = i; const fm = () => f[m === i ? last : heap[m]]; if (l < heap.length && f[heap[l]] < fm()) m = l; if (r < heap.length && f[heap[r]] < fm()) m = r; if (m === i) break; heap[i] = heap[m]; i = m; } heap[i] = last; } return top; };
+    g[s0] = 0; f[s0] = hfn(s0); push(s0);
+    const D = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142], [1, -1, 1.4142], [-1, 1, 1.4142], [-1, -1, 1.4142]];
+    let found = false, steps = 0;
+    while (heap.length && steps++ < 40000) {
+      const k = pop(); if (shut[k]) continue; shut[k] = 1;
+      if (k === g0) { found = true; break; }
+      const i = k % nx, j = (k / nx) | 0;
+      for (const [di, dj, w] of D) {
+        const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= ny) continue;
+        const kk = jj * nx + ii, near = Math.abs(ii - si) <= 3 && Math.abs(jj - sj) <= 3;
+        if (shut[kk] || (b[kk] && !near)) continue;
+        if (di && dj && !near && (b[j * nx + ii] || b[jj * nx + i])) continue;   // no cutting corners
+        const ng = g[k] + w * (b[kk] ? 4 : 1); if (ng < g[kk]) { g[kk] = ng; from[kk] = k; f[kk] = ng + hfn(kk); push(kk); }
+      }
+    }
+    if (!found) return null;
+    const raw = []; for (let k = g0; k !== s0 && k >= 0; k = from[k]) raw.push([(k % nx) * C + C / 2, ((k / nx) | 0) * C + C / 2]);
+    raw.reverse(); raw[raw.length - 1] = [gx, gy];
+    // string-pull: from each anchor jump to the farthest point still in a straight clear line
+    const out = []; let ax = sx, ay = sy, i = 0;
+    while (i < raw.length) {
+      let j = raw.length - 1; while (j > i && !this.clearLine(ax, ay, raw[j][0], raw[j][1])) j--;
+      out.push(raw[j]); [ax, ay] = raw[j]; i = j + 1;
+    }
+    return out;
+  }
   hudHit(m) {
     return inRect(m, 0, 0, 640, 230) || inRect(m, W - 660, 0, 660, 320) || inRect(m, W - 380, H - 270, 380, 270);
   }
@@ -493,24 +573,30 @@ class WorldScene extends MapScene {
     let vx = (G.keys.KeyD || G.keys.ArrowRight ? 1 : 0) - (G.keys.KeyA || G.keys.ArrowLeft ? 1 : 0);
     let vy = (G.keys.KeyS || G.keys.ArrowDown ? 1 : 0) - (G.keys.KeyW || G.keys.ArrowUp ? 1 : 0);
     const wm = this.unproj(G.mouse.x, G.mouse.y);
+    this.hover = this.hudHit(G.mouse) ? null : this.pickAt(G.mouse.x, G.mouse.y);
+    if (G.canvas || document.querySelector('canvas')) (G.canvas || document.querySelector('canvas')).style.cursor = this.hover ? 'pointer' : 'default';
     if (vx || vy) this.target = null;
     else if ((G.mouse.clicked || (G.mouse.down && this.target)) && !this.hudHit(G.mouse)) {
-      // clicking an interactable walks to it and uses it on arrival
-      let hit = null;
-      if (G.mouse.clicked) for (const it of this.interactables()) if (it.act) {   // screen-space pick: the thing's body, not its feet
-        const q = this.proj(it.x, it.y);
-        if (Math.abs(G.mouse.x - q.x) < 80 * q.s && G.mouse.y > q.y - 230 * q.s && G.mouse.y < q.y + 30 * q.s) hit = it;
+      // clicking an interactable walks to it (around obstacles) and uses it on arrival; holding the button steers
+      const hit = G.mouse.clicked ? this.hover : (this.target ? this.target.use : null);
+      const gx = hit ? hit.x : wm.x, gy = hit ? hit.y + 30 : wm.y, tg = this.target;
+      if (G.mouse.clicked || !tg || (!hit && Math.hypot(gx - tg.x, gy - tg.y) > 48 && this.t - tg.at > 0.18)) {
+        this.target = { x: gx, y: gy, use: hit, at: this.t, path: this.findPath(e.x, e.y, gx, gy) };
+        if (this.target.path && !hit) { const l = this.target.path[this.target.path.length - 1]; this.target.x = l[0]; this.target.y = l[1]; }
       }
-      this.target = { x: wm.x, y: wm.y, use: hit || (G.mouse.down && this.target ? this.target.use : null) };
-      if (hit) { this.target.x = hit.x; this.target.y = hit.y + 30; }
       if (G.mouse.clicked) AudioSys.sfx('blip');
     }
     if (this.target) {
-      const dx = this.target.x - e.x, dy = this.target.y - e.y, d = Math.hypot(dx, dy);
-      if (d < (this.target.use ? 90 : 12)) {
-        const u = this.target.use; this.target = null;
+      const tg = this.target, pth = tg.path;
+      while (pth && pth.length > 1 && Math.hypot(pth[0][0] - e.x, pth[0][1] - e.y) < 28) pth.shift();
+      const d = Math.hypot(tg.x - e.x, tg.y - e.y), last = pth && pth.length === 1;
+      if (d < (tg.use ? 90 : 12) || (tg.use && last && Math.hypot(pth[0][0] - e.x, pth[0][1] - e.y) < 14)) {
+        const u = tg.use; this.target = null;
         if (u) { u.act(); return; }
-      } else { vx = dx / d; vy = dy / d; }
+      } else {
+        const [wx, wy] = pth && pth.length ? pth[0] : [tg.x, tg.y], dx = wx - e.x, dy = wy - e.y, dd = Math.hypot(dx, dy) || 1;
+        vx = dx / dd; vy = dy / dd;
+      }
     }
     const len = Math.hypot(vx, vy), run = !!(G.keys.ShiftLeft || G.keys.ShiftRight);
     if (len > 0) { vx /= len; vy /= len; }
@@ -520,7 +606,12 @@ class WorldScene extends MapScene {
     e.moving = false; e.run = run && spd > WALK * 1.1;
     if (spd > 25) {
       const moved = this.tryMove(e, e.vx * dt, e.vy * dt);
-      if (!moved) { if (this.target) this.target = null; e.vx *= 0.3; e.vy *= 0.3; }
+      if (!moved) {
+        const tg = this.target;
+        if (tg && !tg.retried) { tg.retried = true; tg.path = this.findPath(e.x, e.y, tg.x, tg.y); }   // nudged off the path: re-plan once
+        else if (tg) this.target = null;
+        e.vx *= 0.3; e.vy *= 0.3;
+      }
       e.moving = moved;
       const ax = Math.abs(e.vx), ay = Math.abs(e.vy);
       if (e.dir === 'side' ? ax > ay * 0.75 : ax > ay * 1.3) { e.dir = 'side'; e.flip = e.vx < 0; }
@@ -685,9 +776,10 @@ class WorldScene extends MapScene {
   // compose the flat ground for this frame (world coords) into this.gcv
   groundLayer() {
     const v = this.view, x0 = Math.floor(v.x), y0 = Math.floor(v.y), gw = Math.ceil(v.w) + 4, gh = Math.ceil(v.h) + 4;
-    if (!this.gcv || this.gcv.width < gw || this.gcv.height < gh) [this.gcv, this.gctx] = _mkCv(Math.max(gw, this.gcv ? this.gcv.width : 0), Math.max(gh, this.gcv ? this.gcv.height : 0));
+    const gs = CAM3.gs, cw = Math.ceil(gw * gs), ch = Math.ceil(gh * gs);
+    if (!this.gcv || this.gcv.width < cw || this.gcv.height < ch) [this.gcv, this.gctx] = _mkCv(Math.max(cw, this.gcv ? this.gcv.width : 0), Math.max(ch, this.gcv ? this.gcv.height : 0));
     const c = this.gctx, T = CAM3.tile;
-    c.setTransform(1, 0, 0, 1, -x0, -y0);
+    c.setTransform(gs, 0, 0, gs, -x0 * gs, -y0 * gs);
     for (let ty = Math.floor(y0 / T); ty * T < y0 + gh; ty++) for (let tx = Math.floor(x0 / T); tx * T < x0 + gw; tx++) c.drawImage(this.tile(tx, ty), tx * T, ty * T);
     // living water: drifting foam line along the shore and glints
     for (const p of this.waterPaths) {
@@ -736,14 +828,35 @@ class WorldScene extends MapScene {
       c.save(); c.strokeStyle = 'rgba(255,220,140,0.85)'; c.lineWidth = 4; const r = 18 + Math.sin(this.t * 8) * 3;
       c.beginPath(); c.ellipse(this.target.x, this.target.y, r, r * 0.55, 0, 0, TAU); c.stroke(); c.restore();
     }
+    // a soft gold ring under Eric (strategy-RPG style) so he's easy to find in a busy street
+    { const e = this.e; c.save(); c.strokeStyle = 'rgba(255,214,120,0.75)'; c.lineWidth = 3.5;
+      c.beginPath(); c.ellipse(e.x, e.y + 2, 34, 15, 0, 0, TAU); c.stroke();
+      c.strokeStyle = 'rgba(255,214,120,0.25)'; c.lineWidth = 8; c.stroke(); c.restore(); }
+    // the planned route as a faint dotted trail, and a ring under whatever the mouse is pointing at
+    if (this.target && this.target.path && this.target.path.length) {
+      c.save(); c.fillStyle = 'rgba(255,225,160,0.55)';
+      let ax = this.e.x, ay = this.e.y, ph = (this.t * 60) % 26;
+      for (const [bx, by] of this.target.path) {
+        const d = Math.hypot(bx - ax, by - ay);
+        for (let u = ph; u < d - 10; u += 26) { const t = u / d; c.beginPath(); c.ellipse(ax + (bx - ax) * t, ay + (by - ay) * t, 4, 2.4, 0, 0, TAU); c.fill(); }
+        ph = 0; ax = bx; ay = by;
+      }
+      c.restore();
+    }
+    const hv = this.hover || (this.target && this.target.use);
+    if (hv) {
+      const r = (hv.npc ? 44 : 60) + Math.sin(this.t * 5) * 3;
+      c.save(); c.strokeStyle = hv.battle ? 'rgba(255,110,70,0.9)' : 'rgba(255,225,150,0.9)'; c.lineWidth = 4;
+      c.beginPath(); c.ellipse(hv.x, hv.y, r, r * 0.5, 0, 0, TAU); c.stroke(); c.restore();
+    }
     return { x0, y0 };
   }
   // project the flat ground onto the screen, one thin row band at a time
   projectGround(c, g) {
-    const st = CAM3.strip;
+    const st = CAM3.strip, gs = CAM3.gs;
     for (let sy = -st; sy < H + st; sy += st) {
       const a = this.rowDY(sy), b = this.rowDY(sy + st), hw = W / 2 / this.rowS(sy + st / 2);
-      c.drawImage(this.gcv, this.cam.x - hw - g.x0, this.cam.y + a - g.y0, hw * 2, b - a, 0, sy, W, st + 0.75);
+      c.drawImage(this.gcv, (this.cam.x - hw - g.x0) * gs, (this.cam.y + a - g.y0) * gs, hw * 2 * gs, (b - a) * gs, 0, sy, W, st + 0.75);
     }
   }
   drawShadow(c, x, y, w, a = 0.42) {
@@ -941,14 +1054,19 @@ class WorldScene extends MapScene {
     this.projectGround(c, g);
     // depth-sorted standing world, each thing a billboard scaled by its depth
     const list = [];
-    const fadeFor = sp => {   // tall things in front of Eric go see-through so he's never lost behind them
-      if (!(sp.tree || sp.big) || sp.y <= this.e.y + 8) return 1;
-      const img = this.pimg(sp); if (!img) return 1;
-      const w = img.width * sp.h / img.height, ex = this.e.x, ey = this.e.y - ERIC_H * 0.45;
-      return ex > sp.x - w * 0.38 && ex < sp.x + w * 0.38 && ey > sp.y - sp.h * 0.95 && ey < sp.y - sp.h * 0.12 ? 0.2 : 1;
+    // things standing in front of Eric (screen overlap, nearer the camera) are remembered so he can be drawn through them
+    const eq = this.proj(this.e.x, this.e.y), eh = ERIC_H * eq.s, eb = { x: eq.x - eh * 0.42, y: eq.y - eh * 1.04, w: eh * 0.84, h: eh * 1.04 };
+    const occ = [];
+    const occTest = sp => {
+      if (sp.y <= this.e.y + 2 || sp.kind === 'range') return;
+      const img = this.pimg(sp); if (!img) return;
+      const q = this.proj(sp.x, sp.y), h = sp.h * q.s, w = img.width * sp.h / img.height * q.s;
+      if (q.x - w / 2 < eb.x + eb.w && q.x + w / 2 > eb.x && q.y - h < eb.y + eb.h && q.y > eb.y) occ.push(sp);
     };
+    const fadeFor = () => 1;
     this.fadeFor = fadeFor;
     const add = (x, y, f, raw) => list.push({ x, y, f, raw });
+    for (const sp of this.sprites) if (!sp.ground) occTest(sp);
     for (const sp of this.sprites) if (!sp.ground) add(sp.x, sp.y, () => sp.kind === 'range' ? this.drawRange(c, sp.x, sp.y) : sp.draw ? sp.draw(c, sp, this) : this.drawProp(c, sp, fadeFor(sp)));
     for (const n of this.npcs) add(n.x, n.y, () => this.drawNpc(c, n));
     Game.save.skirm = Game.save.skirm || {};
@@ -961,6 +1079,7 @@ class WorldScene extends MapScene {
     add(this.e.x, this.e.y, () => this.drawEric(c));
     list.sort((a, b) => a.y - b.y);
     for (const it of list) it.raw ? it.f() : this.bb(c, it.x, it.y, it.f);
+    if (occ.length) this.drawOccluded(c, occ, eb);
     if (this.drawLifeAir) this.drawLifeAir(c);
     // atmospheric depth: the far ground fades into a soft haze
     const hz = c.createLinearGradient(0, 0, 0, H * 0.42);
@@ -975,18 +1094,70 @@ class WorldScene extends MapScene {
     c.fillStyle = gr; c.fillRect(0, 0, W, H);
     Particles.draw(c, 'back');
     vignette(c, 0.36);
+    if (this.convo) { this.drawConvo(c); if (this.convo && this.convo.out === 0) return; }
     this.drawHud(c);
     Particles.draw(c, 'front');
     if (this.bigmap) this.drawBigMap(c);
     if (this.pack) this.drawPack(c);
     if (this.menu) this.drawMenu(c);
   }
+  // Eric behind a building/tree: redraw just the hidden part of him as a soft warm silhouette (mask = the occluders)
+  drawOccluded(c, occ, eb) {
+    if (!this.ericFrame()) return;
+    const bx = Math.floor(eb.x - 4), by = Math.floor(eb.y - 4), bw = Math.ceil(eb.w + 8), bh = Math.ceil(eb.h + 8);
+    if (!this._occCv || this._occCv.width < bw || this._occCv.height < bh) [this._occCv, this._occCx] = _mkCv(bw + 64, bh + 64);
+    const o = this._occCx, cv = this._occCv;
+    o.setTransform(1, 0, 0, 1, 0, 0); o.globalCompositeOperation = 'source-over'; o.globalAlpha = 1; o.clearRect(0, 0, cv.width, cv.height);
+    o.setTransform(1, 0, 0, 1, -bx, -by);
+    for (const sp of occ) this.bb(o, sp.x, sp.y, () => sp.draw ? sp.draw(o, sp, this) : this.drawProp(o, sp));
+    o.globalCompositeOperation = 'source-in';
+    this.bb(o, this.e.x, this.e.y, () => this.drawEric(o, 0.999));
+    o.setTransform(1, 0, 0, 1, 0, 0);
+    // a thin bright rim around the hidden part, so he reads at a glance
+    if (!this._rimCv || this._rimCv.width < cv.width || this._rimCv.height < cv.height) [this._rimCv, this._rimCx] = _mkCv(cv.width, cv.height);
+    const r = this._rimCx, rc = this._rimCv;
+    r.globalCompositeOperation = 'source-over'; r.clearRect(0, 0, rc.width, rc.height);
+    for (const [ox, oy] of [[-2, 0], [2, 0], [0, -2], [0, 2]]) r.drawImage(cv, ox, oy);
+    r.globalCompositeOperation = 'source-in'; r.fillStyle = '#ffd98a'; r.fillRect(0, 0, rc.width, rc.height);
+    r.globalCompositeOperation = 'destination-out'; r.drawImage(cv, 0, 0);
+    o.globalCompositeOperation = 'source-atop'; o.fillStyle = 'rgba(255,200,120,0.3)'; o.fillRect(0, 0, bw, bh);
+    o.globalCompositeOperation = 'source-over';
+    c.save(); c.globalAlpha = 0.72; c.drawImage(cv, 0, 0, bw, bh, bx, by, bw, bh);
+    c.globalAlpha = 0.95; c.drawImage(rc, 0, 0, bw, bh, bx, by, bw, bh); c.restore();
+  }
+  // keep labels/bubbles readable when the camera is pulled back: grow them about their anchor (head height)
+  uiScale(c, p, x, y) { const k = clamp(0.8 / p.s, 1, 1.7); c.translate(x, y); c.scale(k, k); c.translate(-x, -y); }
+  // conversation stage: the village dims and Eric + the villager stand large, facing each other, above the dialogue box
+  drawConvo(c) {
+    const cv = this.convo, dt = 1 / 60;
+    if (cv.out > 0) { cv.out += dt * 4; if (cv.out >= 1) { this.convo = null; return; } } else cv.t += dt;
+    const a = Math.min(1, cv.t * 4) * (1 - cv.out), sl = Ease.outCubic(Math.min(1, cv.t * 3.5));
+    c.save(); c.globalAlpha = a;
+    c.fillStyle = 'rgba(8,6,4,0.55)'; c.fillRect(0, 0, W, H);
+    const gl = c.createRadialGradient(W / 2, 830, 50, W / 2, 830, 760);
+    gl.addColorStop(0, 'rgba(255,200,130,0.22)'); gl.addColorStop(1, 'rgba(255,200,130,0)');
+    c.fillStyle = gl; c.fillRect(0, 0, W, H);
+    const spk = G.overlay && G.overlay.line ? G.overlay.line.s : null;
+    const fig = (img, x, hgt, flip, lit) => {
+      if (!img) return;
+      const w = img.width * hgt / img.height, y = 870;
+      c.save(); c.globalAlpha = a * 0.5; c.fillStyle = '#000'; c.beginPath(); c.ellipse(x, y - 4, w * 0.36, 22, 0, 0, TAU); c.fill(); c.restore();
+      c.save(); c.translate(x, y); if (flip) c.scale(-1, 1);
+      c.drawImage(img, -w / 2, -hgt, w, hgt);
+      if (!lit) { c.globalAlpha = a * 0.38; c.drawImage(tinted(img, '#0b0806'), -w / 2, -hgt, w, hgt); }
+      c.restore();
+    };
+    const n = cv.npc, nh = 700 * Math.min(1.08, n.d.scale || 1);
+    fig(G.img.eric_front, 600 - (1 - sl) * 120, 700, false, spk === 'eric' || !spk);
+    fig(this.npcBody(n), 1320 + (1 - sl) * 120, nh, false, spk !== 'eric');
+    c.restore();
+  }
   drawWorldUI(c) {
     if (Game.busy || G.overlay) return;
     // name tags for nearby villagers
     for (const n of this.npcs) {
       const d = Math.hypot(n.x - this.e.x, n.y - this.e.y); if (d > 420 || n.d.hideTag) continue;
-      this.bb(c, n.x, n.y, () => {
+      this.bb(c, n.x, n.y, (p) => { this.uiScale(c, p, n.x, n.y - ERIC_H * (n.d.scale || 1));
         const a = clamp((420 - d) / 160, 0, 1), h = n.d.office ? 130 : ERIC_H * (n.d.scale || 1) + 22;
         c.globalAlpha = a;
         c.font = font(22, F.head, 700); const tw = c.measureText(n.d.name).width;
@@ -997,7 +1168,7 @@ class WorldScene extends MapScene {
     // shieldmaiden greetings: speech bubbles over their heads
     for (const n of this.npcs) {
       if (!n.bubble) continue;
-      this.bb(c, n.x, n.y, () => {
+      this.bb(c, n.x, n.y, (p) => { this.uiScale(c, p, n.x, n.y - ERIC_H * (n.d.scale || 1));
         const a = clamp(Math.min(n.bubble.t, 4.5 - n.bubble.t) * 4, 0, 1), h = ERIC_H * (n.d.scale || 1) + (this.focus && this.focus.npc === n ? 150 : 74);
         c.globalAlpha = a; c.font = font(21, F.body, 600);
         const words = n.bubble.text.split(' '), lines = []; let cur = '';

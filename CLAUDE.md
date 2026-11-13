@@ -69,6 +69,14 @@ fallback) → ledger roll / THE END.
   `blacksmith`, cut with `tools/cut/diorama_cut.py <img> <name> 620` (auto-finds the soil edge) then `blend_bases.py`.
   Mead hall interior uses `bg_meadhall` (assets/bg/meadhall.jpg). Prompts: `docs/ASSET_PROMPTS.txt` (every prompt
   self-contained) and `docs/TOP_PROMPTS.txt` (the current short list for the user's limited credits).
+- v3.4 view/controls (after the user's "character too big / see-through houses is clunky" feedback; references: Tyranny,
+  Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people smaller (`ERIC_H` 150, animals x0.82),
+  so the whole village fits on screen. NO fading of buildings: when something stands in front of Eric, `drawOccluded` redraws
+  the hidden part of him as a warm silhouette with a rim (mask = the occluding sprites). Gold ring under Eric. Click-to-move
+  uses A* on a 32px grid (`navGrid`/`findPath`/`clearLine`, string-pulled) with a dotted route; hovering a person/door shows a
+  ring + pointer cursor (`pickAt`). Labels/bubbles grow with `uiScale` to stay readable. Ground layer is rendered at
+  `CAM3.gs` 0.72 resolution for speed. Talking opens a conversation stage (`drawConvo`): world dims, Eric and the villager
+  stand large above the dialogue box (the speaker lit, the listener dimmed).
 - Shieldmaidens (Astrid/Sigrid/Freydis/Runa, `maiden1..4` in `WORLD_NPCS`, art from `source_art/Character/Viking_women.jpg`) stand
   around the world and always greet Eric with playful flirty `barks` (speech bubble, one at a time, 30 s cooldown); E = short chat.
   Brynja the barmaid (`npc_barmaid`, cut off at the knees, so she always stands behind a counter/table) greets Eric in the mead hall
