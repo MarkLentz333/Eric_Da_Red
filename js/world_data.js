@@ -214,3 +214,7 @@ const BRYNJA_TALK = [
   [{ s: 'barmaid', t: "I keep a tally of everyone who makes me smile in this hall. You're the whole list, Eric." }, { s: 'eric', m: 'smirk', t: 'And Thomas?' }, { s: 'barmaid', t: "Thomas makes me check the till twice. Huh?" }],
   [{ s: 'barmaid', t: 'Careful with the tray, I just had these mugs polished. Unlike that beard. Which is perfect.' }, { s: 'eric', m: 'smirk', t: "It's regulation length." }, { s: 'barmaid', t: 'Mm-hmm. I checked.' }],
 ];
+
+// Real villager art from the user's turnaround sheets (source_art/Character/<id>.jpg, 3/4 view cut with isnet_cut.py).
+// npc_<id> overrides the recolored rig placeholder automatically.
+for (const n of ['olaf', 'bjarni']) { IMAGES['npc_' + n] = `assets/sprites/npc_${n}.png`; IMAGES['p_' + n] = `assets/portraits/${n}.jpg`; SPEAKERS[n].portrait = 'p_' + n; }
