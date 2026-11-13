@@ -5,7 +5,7 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 150, ERIC_R = 22, WALK = 330, ZOOM = 1.12;
+const ERIC_H = 150, ERIC_R = 17, WALK = 330, ZOOM = 1.12;
 // v3.3 perspective camera: the ground is a tilted plane seen through a pinhole camera (pitch = tilt from the ground,
 // F = focal length in px, zoom = scale at the focus point, h0 = screen row of the focus point). Standing things are
 // billboards scaled by depth; the ground is rendered flat into tiles and projected row by row.
@@ -19,6 +19,22 @@ const RIG = {
   q34: { w: 318, h: 684, armL: [60, 205], armR: [280, 212], legL: [100, 470], legR: [205, 470], relax: 0.05, far: 'armR' },
 };
 let _cvId = 0;
+// point inside a convex polygon (either winding), or within pad of its edges
+function _inPoly(q, x, y, pad = 0) {
+  let pos = 0, neg = 0;
+  for (let i = 0; i < q.length; i++) {
+    const [ax, ay] = q[i], [bx, by] = q[(i + 1) % q.length], cr = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+    if (cr > 0) pos++; else if (cr < 0) neg++;
+  }
+  if (!pos || !neg) return true;
+  if (pad <= 0) return false;
+  for (let i = 0; i < q.length; i++) {
+    const [ax, ay] = q[i], [bx, by] = q[(i + 1) % q.length], vx = bx - ax, vy = by - ay;
+    const t = clamp(((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1), dx = x - ax - vx * t, dy = y - ay - vy * t;
+    if (dx * dx + dy * dy < pad * pad) return true;
+  }
+  return false;
+}
 
 function _rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function _chaikin(pts, it = 2, closed = true) {
@@ -209,6 +225,7 @@ class WorldScene extends MapScene {
     // roaming enemies
     this.skirm = SKIRMISHES.map(d => ({ d, x: d.x, y: d.y, tx: d.x, ty: d.y, wait: rand(0, 2), t: rand(0, 9), chase: false, face: 1 }));
     if (this.buildVillage) this.buildVillage(R);
+    this.makeFootprints();
     // overview (minimap + big map) prerender
     this.overview = this.renderOverview(520, 320);
     this.overviewBig = this.renderOverview(1560, 960);
@@ -319,12 +336,29 @@ class WorldScene extends MapScene {
     if (onDeck) { if (!this.cleared('bridge') && x > d.x + 40) return true; }
     else if (this.wet(x, y)) return true;
     if (!this.gateOpen() && x > GATE.x && x < GATE.x + GATE.w && y > GATE.y && y < GATE.y + GATE.h) return true;
-    for (const s of this.solids) { const dx = x - s.x, dy = (y - s.y) * 1.5; if (dx * dx + dy * dy < (s.r + who) * (s.r + who)) return true; }
+    for (const s of this.solids) {
+      if (s.q) {   // convex footprint polygon; Eric's radius pads it a little
+        if (x < s.x0 - who || x > s.x1 + who || y < s.y0 - who || y > s.y1 + who) continue;
+        if (_inPoly(s.q, x, y, who * 0.75)) return true;
+        continue;
+      }
+      if (s.seg) {   // fence/wall run: a capsule along the segment
+        const [ax, ay, bx, by] = s.seg, vx = bx - ax, vy = by - ay, t = clamp(((x - ax) * vx + (y - ay) * vy) / (vx * vx + vy * vy || 1), 0, 1);
+        const dx = x - ax - vx * t, dy = y - ay - vy * t, rr2 = s.r + who * 0.8;
+        if (dx * dx + dy * dy < rr2 * rr2) return true;
+        continue;
+      }
+      const dx = x - s.x, dy = (y - s.y) * 1.5; if (dx * dx + dy * dy < (s.r + who) * (s.r + who)) return true;
+    }
     return false;
   }
   tryMove(o, dx, dy, who) {
     if (this.blocked(o.x, o.y, who)) { o.x += dx; o.y += dy; return true; }   // stuck inside something (spawn, resized prop): let them walk out
     if (!this.blocked(o.x + dx, o.y + dy, who)) { o.x += dx; o.y += dy; return true; }
+    for (const a of [0.52, -0.52, 1.05, -1.05]) {
+      const c = Math.cos(a), sn = Math.sin(a), nx = (dx * c - dy * sn) * c, ny = (dx * sn + dy * c) * c;
+      if (!this.blocked(o.x + nx, o.y + ny, who)) { o.x += nx; o.y += ny; return true; }
+    }
     if (dx && !this.blocked(o.x + dx, o.y, who)) { o.x += dx; return true; }
     if (dy && !this.blocked(o.x, o.y + dy, who)) { o.y += dy; return true; }
     return false;
@@ -482,12 +516,12 @@ class WorldScene extends MapScene {
     const key = this.gateOpen() + '|' + this.cleared('bridge') + '|' + this.solids.length;
     if (this._nav && this._nav.key === key) return this._nav;
     const C = 32, nx = Math.ceil(WORLD.w / C), ny = Math.ceil(WORLD.h / C), b = new Uint8Array(nx * ny);
-    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) b[j * nx + i] = this.blocked(i * C + C / 2, j * C + C / 2, ERIC_R + 4) ? 1 : 0;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) b[j * nx + i] = this.blocked(i * C + C / 2, j * C + C / 2, ERIC_R + 1) ? 1 : 0;
     return (this._nav = { key, C, nx, ny, b });
   }
-  clearLine(ax, ay, bx, by) {
-    const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 12);
-    for (let k = 1; k <= n; k++) { const t = k / n; if (this.blocked(ax + (bx - ax) * t, ay + (by - ay) * t, ERIC_R + 2)) return false; }
+  clearLine(ax, ay, bx, by, who = ERIC_R + 1) {
+    const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 10);
+    for (let k = 1; k <= n; k++) { const t = k / n; if (this.blocked(ax + (bx - ax) * t, ay + (by - ay) * t, who)) return false; }
     return true;
   }
   // A* on the grid, then string-pulled into a few straight legs. Returns [[x,y],...] ending at the goal (or the nearest
@@ -505,7 +539,10 @@ class WorldScene extends MapScene {
       }
       return best;
     };
-    const si = ci(sx), sj = cj(sy), s0 = sj * nx + si;   // Eric may stand in a padded edge or a tiny pocket: cells near him stay passable
+    // Eric may stand in a padded edge or a tiny pocket: cells right around him stay passable, but only ones he can really
+    // walk straight to (or any of them when he's actually stuck inside something) - never through a fence or wall
+    const si = ci(sx), sj = cj(sy), s0 = sj * nx + si, stuck = this.blocked(sx, sy, ERIC_R), memo = new Map();
+    const openNear = k => { if (stuck) return true; if (!memo.has(k)) memo.set(k, this.clearLine(sx, sy, (k % nx) * C + C / 2, ((k / nx) | 0) * C + C / 2, ERIC_R - 3)); return memo.get(k); };
     let gi = ci(gx), gj = cj(gy);
     if (b[gj * nx + gi]) {   // clicked on a house/water: aim for the nearest free cell (prefer the side facing Eric)
       const best = nearFree(gi, gj, sx, sy);
@@ -527,7 +564,7 @@ class WorldScene extends MapScene {
       const i = k % nx, j = (k / nx) | 0;
       for (const [di, dj, w] of D) {
         const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= ny) continue;
-        const kk = jj * nx + ii, near = Math.abs(ii - si) <= 3 && Math.abs(jj - sj) <= 3;
+        const kk = jj * nx + ii, near = b[kk] && Math.abs(ii - si) <= 3 && Math.abs(jj - sj) <= 3 && openNear(kk);
         if (shut[kk] || (b[kk] && !near)) continue;
         if (di && dj && !near && (b[j * nx + ii] || b[jj * nx + i])) continue;   // no cutting corners
         const ng = g[k] + w * (b[kk] ? 4 : 1); if (ng < g[kk]) { g[kk] = ng; from[kk] = k; f[kk] = ng + hfn(kk); push(kk); }
@@ -590,6 +627,11 @@ class WorldScene extends MapScene {
       const tg = this.target, pth = tg.path;
       while (pth && pth.length > 1 && Math.hypot(pth[0][0] - e.x, pth[0][1] - e.y) < 28) pth.shift();
       const d = Math.hypot(tg.x - e.x, tg.y - e.y), last = pth && pth.length === 1;
+      // watchdog: no real progress for 0.7 s -> re-plan once, then stop instead of grinding against a wall
+      if (tg.best == null || d < tg.best - 6) { tg.best = d; tg.stall = 0; } else if ((tg.stall = (tg.stall || 0) + dt) > 0.7) {
+        if (!tg.replanned) { tg.replanned = true; tg.stall = 0; tg.best = d; tg.path = this.findPath(e.x, e.y, tg.x, tg.y); }
+        else if (!tg.use || d > 140) { this.target = null; e.vx *= 0.3; e.vy *= 0.3; }
+      }
       if (d < (tg.use ? 90 : 12) || (tg.use && last && Math.hypot(pth[0][0] - e.x, pth[0][1] - e.y) < 14)) {
         const u = tg.use; this.target = null;
         if (u) { u.act(); return; }
@@ -863,6 +905,64 @@ class WorldScene extends MapScene {
     c.save(); c.globalAlpha = a; c.fillStyle = '#000';
     c.beginPath(); c.ellipse(x, y, w, w * 0.32, 0, 0, TAU); c.fill(); c.restore();
   }
+  // Ground footprint of a standing sprite, read from its art: the lowest opaque pixels give the left, front and right
+  // corners of its base; the back corner mirrors the front (iso dioramas sit on a diamond). Mapped onto the ground plane
+  // (screen-up in the art = further away / sin(pitch)), then pulled in a little so eaves and soft edges don't block.
+  footprintQuad(sp) {
+    const img = this.pimg(sp); if (!img || !img.width) return null;
+    this._fp = this._fp || {};
+    const key = sp.img + '|' + img.width + 'x' + img.height;
+    let f = this._fp[key];
+    if (f === undefined) {
+      const cw = 96, ch = Math.max(8, Math.round(img.height * cw / img.width)), [cv, cx] = _mkCv(cw, ch);
+      cx.drawImage(img, 0, 0, cw, ch);
+      let d; try { d = cx.getImageData(0, 0, cw, ch).data; } catch (e) { d = null; }
+      f = null;
+      if (d) {
+        const bot = new Array(cw).fill(-1);
+        const solid = k => { const r = d[k], g = d[k + 1], b = d[k + 2]; return d[k + 3] > 170 && !(g > r * 1.04 && g > b * 1.12); };   // opaque and not grass
+        for (let i = 0; i < cw; i++) for (let j = ch - 1; j >= ch * 0.35; j--) {
+          const k = (j * cw + i) * 4;   // need two solid pixels stacked, so stray flowers/pebbles don't count
+          if (solid(k) && j > 0 && solid(k - cw * 4)) { bot[i] = j; break; }
+        }
+        let li = -1, ri = -1, fi = -1;
+        for (let i = 0; i < cw; i++) if (bot[i] >= 0) { if (li < 0) li = i; ri = i; if (fi < 0 || bot[i] > bot[fi]) fi = i; }
+        if (li >= 0 && ri - li > 3) f = { cw, ch, L: [li, bot[li]], R: [ri, bot[ri]], F: [fi, bot[fi]] };
+      }
+      this._fp[key] = f;
+    }
+    if (!f) return null;
+    const sinP = Math.sin(CAM3.pitch), s = sp.h / f.ch, fl = sp.flip ? -1 : 1;
+    const W_ = ([i, j]) => [sp.x + (i - f.cw / 2) * s * fl, sp.y - (f.ch - 1 - j) * s / sinP];
+    let L = W_(f.L), R = W_(f.R), F = W_(f.F);
+    if (fl < 0) [L, R] = [R, L];
+    const span = R[0] - L[0], front = F[1] - (L[1] + R[1]) / 2;
+    let q;
+    if (front < span * 0.12) {   // flat-fronted (stalls, carts): a box as deep as half its width
+      const y1 = Math.max(L[1], R[1], F[1]), y0 = y1 - span * 0.62 / sinP;
+      q = [[L[0], y0], [R[0], y0], [R[0], y1], [L[0], y1]];
+    } else q = [L, F, R, [L[0] + R[0] - F[0], L[1] + R[1] - F[1]]];
+    const cx = q.reduce((a, p) => a + p[0], 0) / 4, cy = q.reduce((a, p) => a + p[1], 0) / 4, k = 0.8;
+    q = q.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]);
+    return { q, x0: Math.min(...q.map(p => p[0])), x1: Math.max(...q.map(p => p[0])), y0: Math.min(...q.map(p => p[1])), y1: Math.max(...q.map(p => p[1])), fp: true };
+  }
+  // swap the round placeholder solids of buildings/props for footprints that match what you see
+  makeFootprints() {
+    const add = [];
+    for (const sp of this.sprites) {
+      if (sp.tree || sp.ground || sp.kind === 'range' || !sp.img || sp.h < 70) continue;
+      const img = this.pimg(sp); if (!img) continue;
+      const w = img.width * sp.h / img.height;
+      const near = this.solids.filter(o => !o.q && !o.seg && o.r >= 12 && Math.abs(o.x - sp.x) < w * 0.5 && o.y <= sp.y + 12 && o.y >= sp.y - sp.h * 0.6);
+      if (!near.length) continue;
+      const fq = this.footprintQuad(sp); if (!fq) continue;
+      for (const o of near) o.dead = true;
+      add.push(fq);
+    }
+    this.solids = this.solids.filter(o => !o.dead).concat(add);
+    this.dbgSolids = /[?&]solids/.test(location.search);
+    this._nav = null;
+  }
   pimg(sp) { return (sp.img.startsWith('w_') && G.img['b_' + sp.img.slice(2)]) || G.img[sp.img]; }
   drawProp(c, sp, fade = 1) {
     const img = this.pimg(sp); if (!img) return null;
@@ -1080,6 +1180,19 @@ class WorldScene extends MapScene {
     list.sort((a, b) => a.y - b.y);
     for (const it of list) it.raw ? it.f() : this.bb(c, it.x, it.y, it.f);
     if (occ.length) this.drawOccluded(c, occ, eb);
+    if (this.dbgSolids) {   // ?solids: every collision shape, projected on top of everything
+      const P = (x, y) => { const q = this.proj(x, y); return [q.x, q.y]; };
+      c.save(); c.lineWidth = 3;
+      for (const o of this.solids) {
+        if (Math.abs(o.x - this.cam.x) > 2200 && !o.q) continue;
+        c.beginPath(); c.strokeStyle = o.q ? 'rgba(255,40,40,0.95)' : o.seg ? 'rgba(255,160,0,0.95)' : 'rgba(80,160,255,0.9)';
+        if (o.q) { o.q.forEach(([x, y], i) => c[i ? 'lineTo' : 'moveTo'](...P(x, y))); c.closePath(); }
+        else if (o.seg) { c.moveTo(...P(o.seg[0], o.seg[1])); c.lineTo(...P(o.seg[2], o.seg[3])); }
+        else for (let k = 0; k <= 16; k++) { const a = k / 16 * TAU; c[k ? 'lineTo' : 'moveTo'](...P(o.x + Math.cos(a) * o.r, o.y + Math.sin(a) * o.r / 1.5)); }
+        c.stroke();
+      }
+      c.restore();
+    }
     if (this.drawLifeAir) this.drawLifeAir(c);
     // atmospheric depth: the far ground fades into a soft haze
     const hz = c.createLinearGradient(0, 0, 0, H * 0.42);

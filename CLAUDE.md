@@ -77,6 +77,11 @@ fallback) → ledger roll / THE END.
   ring + pointer cursor (`pickAt`). Labels/bubbles grow with `uiScale` to stay readable. Ground layer is rendered at
   `CAM3.gs` 0.72 resolution for speed. Talking opens a conversation stage (`drawConvo`): world dims, Eric and the villager
   stand large above the dialogue box (the speaker lit, the listener dimmed).
+- Collision (v3.4): buildings/props get footprint polygons read from their own art (`footprintQuad`/`makeFootprints`:
+  lowest non-grass opaque pixels = base corners, mapped to the ground plane), fences/walls are capsules (`seg`), trees stay
+  circles. `tryMove` glides along walls (tries the step turned 30/60 deg). Click paths: A* grid padded ERIC_R+1, start-cell
+  escape only toward cells Eric can walk straight to, 0.7 s no-progress watchdog re-plans once then stops. Debug view:
+  add `&solids` to the URL to draw every collision shape. Robot test (80 random town trips) = 80/80 arrivals.
 - Shieldmaidens (Astrid/Sigrid/Freydis/Runa, `maiden1..4` in `WORLD_NPCS`, art from `source_art/Character/Viking_women.jpg`) stand
   around the world and always greet Eric with playful flirty `barks` (speech bubble, one at a time, 30 s cooldown); E = short chat.
   Brynja the barmaid (`npc_barmaid`, cut off at the knees, so she always stands behind a counter/table) greets Eric in the mead hall

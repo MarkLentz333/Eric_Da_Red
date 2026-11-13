@@ -91,12 +91,12 @@ Object.assign(WorldScene.prototype, {
     for (const p of VILLAGE.plots) fence([[p.x - 8, p.y - 8], [p.x + p.w + 8, p.y - 8], [p.x + p.w + 8, p.y + p.h + 8], [p.x - 8, p.y + p.h + 8], [p.x - 8, p.y - 8]], [2, 1]);
     const pn = VILLAGE.pen;
     fence([[pn.x, pn.y], [pn.x + pn.w, pn.y], [pn.x + pn.w, pn.y + pn.h], [pn.x, pn.y + pn.h], [pn.x, pn.y]]);
-    for (const f of L.fences) { const mx = (f.a[0] + f.b[0]) / 2, my = (f.a[1] + f.b[1]) / 2; this.solids.push({ x: mx, y: my, r: 20, fence: true }); }
+    for (const f of L.fences) this.solids.push({ x: (f.a[0] + f.b[0]) / 2, y: (f.a[1] + f.b[1]) / 2, seg: [f.a[0], f.a[1], f.b[0], f.b[1]], r: 10, fence: true });
     for (const w of VILLAGE.walls) for (let i = 0; i < w.length - 1; i++) {
       const [ax, ay] = w[i], [bx, by] = w[i + 1], n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / 70));
       for (let k = 0; k < n; k++) {
         const a = [ax + (bx - ax) * k / n, ay + (by - ay) * k / n], b = [ax + (bx - ax) * (k + 1) / n, ay + (by - ay) * (k + 1) / n];
-        L.walls.push({ a, b, seed: R() * 999 }); this.solids.push({ x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, r: 26 });
+        L.walls.push({ a, b, seed: R() * 999 }); this.solids.push({ x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2, seg: [a[0], a[1], b[0], b[1]], r: 16 });
       }
     }
     L.bunting = VILLAGE.bunting.map(([a, b]) => ({ a, b, seed: R() * 9 }));
