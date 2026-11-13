@@ -70,7 +70,8 @@ fallback) → ledger roll / THE END.
   Mead hall interior uses `bg_meadhall` (assets/bg/meadhall.jpg). Prompts: `docs/ASSET_PROMPTS.txt` (every prompt
   self-contained) and `docs/TOP_PROMPTS.txt` (the current short list for the user's limited credits).
 - v3.4 view/controls (after the user's "character too big / see-through houses is clunky" feedback; references: Tyranny,
-  Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people smaller (`ERIC_H` 150, animals x0.82),
+  Pillars-style isometric RPGs): camera pulled back (`CAM3` pitch 1.0, zoom 0.66), people smaller (`ERIC_H` 132, animals x0.74;
+  village props x0.9, big buildings x1.12, trees x1.1 after a "bit crowded" note; west cluster thinned: 3rd stall removed),
   so the whole village fits on screen. NO fading of buildings: when something stands in front of Eric, `drawOccluded` redraws
   the hidden part of him as a warm silhouette with a rim (mask = the occluding sprites). Gold ring under Eric. Click-to-move
   uses A* on a 32px grid (`navGrid`/`findPath`/`clearLine`, string-pulled) with a dotted route; hovering a person/door shows a
@@ -80,7 +81,7 @@ fallback) → ledger roll / THE END.
 - Collision (v3.4): buildings/props get footprint polygons read from their own art (`footprintQuad`/`makeFootprints`:
   lowest non-grass opaque pixels = base corners, mapped to the ground plane), fences/walls are capsules (`seg`), trees stay
   circles. `tryMove` glides along walls (tries the step turned 30/60 deg). Click paths: A* grid padded ERIC_R+1, start-cell
-  escape only toward cells Eric can walk straight to, 0.7 s no-progress watchdog re-plans once then stops. Debug view:
+  escape only toward cells Eric can walk straight to, each step also tests its midpoint (lanterns fit between cell centres), 0.7 s no-progress watchdog re-plans once then stops. Debug view:
   add `&solids` to the URL to draw every collision shape. Robot test (80 random town trips) = 80/80 arrivals.
 - Shieldmaidens (Astrid/Sigrid/Freydis/Runa, `maiden1..4` in `WORLD_NPCS`, art from `source_art/Character/Viking_women.jpg`) stand
   around the world and always greet Eric with playful flirty `barks` (speech bubble, one at a time, 30 s cooldown); E = short chat.

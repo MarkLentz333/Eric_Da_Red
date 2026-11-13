@@ -13,7 +13,7 @@ const VILLAGE = {
   // extra houses (the user's longhouse diorama), flip = mirrored for variety
   houses: [
     { x: 1385, y: 1545, h: 380, flip: false },
-    { x: 1560, y: 2090, h: 370, flip: false },
+    { x: 1720, y: 2210, h: 370, flip: false },
     { x: 2570, y: 1395, h: 380, flip: false },
     { x: 1320, y: 1300, h: 360, flip: true },
   ],
@@ -21,7 +21,7 @@ const VILLAGE = {
   plots: [
     { x: 1440, y: 1590, w: 170, h: 110, crop: 'cabbage' },
     { x: 2150, y: 1940, w: 160, h: 100, crop: 'wheat' },
-    { x: 1610, y: 2110, w: 150, h: 100, crop: 'cabbage' },
+    { x: 1480, y: 2080, w: 150, h: 100, crop: 'cabbage' },
     { x: 2380, y: 2030, w: 140, h: 120, crop: 'wheat' },
   ],
   // the sheep pen
@@ -31,7 +31,6 @@ const VILLAGE = {
   stalls: [   // the user's market-stall dioramas
     { x: 1590, y: 1530, img: 'stall1', h: 270, flip: false },
     { x: 1955, y: 1560, img: 'stall2', h: 270, flip: true },
-    { x: 1560, y: 1800, img: 'stall2', h: 260, flip: false },
   ],
   hay: [[1830, 1210], [1890, 1260], [1790, 1290]],
   forge: { x: 2560, y: 1990, h: 410 },   // the user's blacksmith diorama
@@ -54,9 +53,9 @@ Object.assign(WorldScene.prototype, {
     const roadDist = (x, y) => { let best = 1e9; for (const r of this.roads) for (let i = 0; i < r.length - 1; i++) best = Math.min(best, _segDist(x, y, r[i], r[i + 1])); return best; };
     this.roadDist = roadDist;
     // bigger buildings (people are ~186 tall: a house should be well over twice that)
-    for (const sp of this.sprites) if (!sp.tree && sp.h > 220 && !sp.ground) { sp.h *= 1.25; sp.big = true; }
+    for (const sp of this.sprites) if (!sp.tree && sp.h > 220 && !sp.ground) { sp.h *= 1.12; sp.big = true; }
     for (const s of this.solids) if (s.r > 100) s.r *= 1.15;
-    for (const sp of this.sprites) if (sp.tree) sp.h *= 1.22;
+    for (const sp of this.sprites) if (sp.tree) sp.h *= 1.1;
     // houses
     for (const hs of VILLAGE.houses) {
       this.sprites.push({ kind: 'prop', img: 'w_longhouse', x: hs.x, y: hs.y, h: hs.h, big: true, flip: hs.flip, smoke: [hs.flip ? 0.43 : 0.57, 0.86] });
@@ -119,6 +118,8 @@ Object.assign(WorldScene.prototype, {
       this.sprites.push({ kind: 'prop', img: 'w_' + p, x, y, h, flip: R() < 0.5 });
       this.solids.push({ x, y: y - 8, r: h * 0.28 });
     }
+    // village buildings/props a touch smaller than drawn so the streets between them breathe (footprints follow the art)
+    for (const sp of this.sprites) if (!sp.tree && !sp.ground && sp.kind === 'prop' && !sp._vs) { sp.h *= 0.9; sp._vs = true; }
     // chimney smoke from the home cottage, the houses and the other buildings that have a chimney
     for (const sp of this.sprites) {
       if (sp.smoke) L.smoke.push({ sp, fx: sp.smoke[0], fy: sp.smoke[1], seed: R() * 99 });
@@ -326,9 +327,9 @@ Object.assign(WorldScene.prototype, {
       const sz = { chicken: 12, sheep: 34, pig: 30, goat: 28, dog: 26, cat: 0, crow: 8 }[a.type] || 10;
       if (!sz) continue;
       const lift = a.z || 0;
-      c.fillStyle = `rgba(0,0,0,${0.3 * Math.max(0.2, 1 - lift / 160)})`; c.beginPath(); c.ellipse(a.x + lift * 0.4, a.y, sz * 0.82, sz * 0.3, 0, 0, TAU); c.fill();
+      c.fillStyle = `rgba(0,0,0,${0.3 * Math.max(0.2, 1 - lift / 160)})`; c.beginPath(); c.ellipse(a.x + lift * 0.4, a.y, sz * 0.74, sz * 0.27, 0, 0, TAU); c.fill();
     }
-    for (const w of L.walkers || []) { if (w.x < v.x - 60 || w.x > v.x + v.w + 60 || w.y < v.y - 60 || w.y > v.y + v.h + 60) continue; c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); c.ellipse(w.x + 6, w.y, 26 * w.sc, 9 * w.sc, 0, 0, TAU); c.fill(); }
+    for (const w of L.walkers || []) { if (w.x < v.x - 60 || w.x > v.x + v.w + 60 || w.y < v.y - 60 || w.y > v.y + v.h + 60) continue; c.fillStyle = 'rgba(0,0,0,0.32)'; c.beginPath(); c.ellipse(w.x + 5, w.y, 23 * w.sc, 8 * w.sc, 0, 0, TAU); c.fill(); }
     for (const g of L.gulls) { const x = g.cx + Math.cos(g.a) * g.r, y = g.cy + Math.sin(g.a) * g.r * 0.6; c.fillStyle = 'rgba(0,0,0,0.14)'; c.beginPath(); c.ellipse(x + g.z * 0.5, y, 14, 5, 0, 0, TAU); c.fill(); }
     // lantern pools of light
     c.save(); c.globalCompositeOperation = 'lighter';
@@ -522,7 +523,7 @@ Object.assign(WorldScene.prototype, {
     const t = a.t, mv = a.moving ? 1 : 0;
     c.save(); c.translate(a.x, a.y - (a.z || 0));
     const fl = a.type === 'cat' ? (a.look || 1) : a.face;
-    c.scale(fl * 0.82, 0.82);   // animals sized to the (smaller) townsfolk
+    c.scale(fl * 0.74, 0.74);   // animals sized to the (smaller) townsfolk
     if (this['_a_' + a.type]) this['_a_' + a.type](c, a, t, mv);
     c.restore();
   },

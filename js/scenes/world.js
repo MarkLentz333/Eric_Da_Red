@@ -5,7 +5,7 @@
 //  bumps into roaming enemies, and walks up to story locations to trigger them.
 //  Story flow (banner → cutscene → dialog → battle) is still Game.runNode().
 // ============================================================================
-const ERIC_H = 150, ERIC_R = 17, WALK = 330, ZOOM = 1.12;
+const ERIC_H = 132, ERIC_R = 15, WALK = 330, ZOOM = 1.12;
 // v3.3 perspective camera: the ground is a tilted plane seen through a pinhole camera (pitch = tilt from the ground,
 // F = focal length in px, zoom = scale at the focus point, h0 = screen row of the focus point). Standing things are
 // billboards scaled by depth; the ground is rendered flat into tiles and projected row by row.
@@ -557,6 +557,9 @@ class WorldScene extends MapScene {
     const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { let i = 0; for (;;) { let l = 2 * i + 1, r = l + 1, m = i; const fm = () => f[m === i ? last : heap[m]]; if (l < heap.length && f[heap[l]] < fm()) m = l; if (r < heap.length && f[heap[r]] < fm()) m = r; if (m === i) break; heap[i] = heap[m]; i = m; } heap[i] = last; } return top; };
     g[s0] = 0; f[s0] = hfn(s0); push(s0);
     const D = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142], [1, -1, 1.4142], [-1, 1, 1.4142], [-1, -1, 1.4142]];
+    // thin things (lanterns, posts) can sit between two cell centres: test the point half-way along each step too
+    const NX2 = nx * 2, mid = this._navMid && this._navMid.key === this._nav.key ? this._navMid.m : (this._navMid = { key: this._nav.key, m: new Uint8Array(N * 4) }).m;
+    const midOk = (i, j, di, dj) => { const h = (2 * j + 1 + dj) * NX2 + 2 * i + 1 + di; if (!mid[h]) mid[h] = this.blocked((i + 0.5 + di / 2) * C, (j + 0.5 + dj / 2) * C, ERIC_R + 1) ? 2 : 1; return mid[h] === 1; };
     let found = false, steps = 0;
     while (heap.length && steps++ < 40000) {
       const k = pop(); if (shut[k]) continue; shut[k] = 1;
@@ -567,6 +570,7 @@ class WorldScene extends MapScene {
         const kk = jj * nx + ii, near = b[kk] && Math.abs(ii - si) <= 3 && Math.abs(jj - sj) <= 3 && openNear(kk);
         if (shut[kk] || (b[kk] && !near)) continue;
         if (di && dj && !near && (b[j * nx + ii] || b[jj * nx + i])) continue;   // no cutting corners
+        if (!b[k] && !b[kk] && !midOk(i, j, di, dj)) continue;
         const ng = g[k] + w * (b[kk] ? 4 : 1); if (ng < g[kk]) { g[kk] = ng; from[kk] = k; f[kk] = ng + hfn(kk); push(kk); }
       }
     }
